@@ -27,7 +27,7 @@ def ddt(cls):
     many methods as data items are passed as parameters to ``@data``.
     """
 
-    def run_with(func, *args, **kwargs):
+    def feed_data(func, *args, **kwargs):
         """
         This internal method decorator feeds the test data item to the test.
         """
@@ -42,7 +42,7 @@ def ddt(cls):
             for v in getattr(f, MAGIC):
                 setattr(cls, 
                         "{0}_{1}".format(name, v), 
-                        run_with(f, v))
+                        feed_data(f, v))
                 i = i + 1
             delattr(cls, name)
     return cls
