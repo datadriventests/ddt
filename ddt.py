@@ -1,7 +1,7 @@
 from functools import wraps
 
 
-MAGIC='%values'  # this value cannot conflict with any real python attribute
+MAGIC = '%values'  # this value cannot conflict with any real python attribute
 
 
 def data(*values):
@@ -40,10 +40,9 @@ def ddt(cls):
         if hasattr(f, MAGIC):
             i = 0
             for v in getattr(f, MAGIC):
-                setattr(cls, 
-                        "{0}_{1}".format(name, v), 
+                setattr(cls,
+                        "{0}_{1}".format(name, v),
                         feed_data(f, v))
                 i = i + 1
             delattr(cls, name)
     return cls
-
