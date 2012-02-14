@@ -2,3 +2,5 @@
 build/
 dist/
 ddt.egg-info/
+.coverage
+cover/
