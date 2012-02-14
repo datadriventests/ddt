@@ -2,11 +2,13 @@ from ddt import ddt, data
 from nose.tools import assert_equal
 
 
+@ddt
 class Dummy(object):
     """Dummy class to test decorators on"""
+
     @data(1, 2, 3, 4)
-    def test_something(self):
-        pass
+    def test_something(self, value):
+        return value
 
 
 def test_data_decorator():
@@ -28,12 +30,24 @@ def test_data_decorator():
     assert_equal(getattr(data_hello, extra_attr), (1, 2))
 
 
+is_test = lambda x: x.startswith('test_')
+
+
 def test_ddt():
     """Test the ``ddt`` class decorator"""
 
-    is_test = lambda x: x.startswith('test_')
     tests = len(filter(is_test, Dummy.__dict__))
-    assert_equal(tests, 1)
-    post_dummy = ddt(Dummy)
-    post_tests = len(filter(is_test, post_dummy.__dict__))
-    assert_equal(post_tests, 4)
+    assert_equal(tests, 4)
+
+
+def test_feed_data():
+    """Test that data is fed to the decorated tests"""
+
+    tests = filter(is_test, Dummy.__dict__)
+    values = []
+    obj = Dummy()
+    for test in tests:
+        method = getattr(obj, test)
+        values.append(method())
+
+    assert_equal(set(values), set([1, 2, 3, 4]))
