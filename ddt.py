@@ -18,12 +18,12 @@ def data(*values):
 
 def ddt(cls):
     """
-    Class decorator for instances of ``unittest.TestCase``.
+    Class decorator for subclasses of ``unittest.TestCase``.
 
     Apply this decorator to the test case class, and then
     decorate test methods with ``@data``.
 
-    For each method decorated with ``@data``, this will create as
+    For each method decorated with ``@data``, this will effectively create as
     many methods as data items are passed as parameters to ``@data``.
     """
 

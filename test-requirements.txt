@@ -2,3 +2,4 @@ nose
 pep8
 coverage
 flake8
+Sphinx
