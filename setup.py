@@ -2,12 +2,13 @@
 # # coding: utf-8
 
 from setuptools import setup
+from ddt import __version__
 
 setup(
     name='ddt',
     description='Data-Driven/Decorated Tests',
     long_description='A library to multiply test cases',
-    version='0.1.1',
+    version=__version__,
     author='Carles Barrobés',
     author_email='carles@barrobes.com',
     url='https://github.com/txels/ddt',
