@@ -41,9 +41,8 @@ def ddt(cls):
         if hasattr(f, MAGIC):
             i = 0
             for v in getattr(f, MAGIC):
-                setattr(cls,
-                        "{0}_{1}".format(name, v),
-                        feed_data(f, v))
+                test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
+                setattr(cls, test_name, feed_data(f, v))
                 i = i + 1
             delattr(cls, name)
     return cls
