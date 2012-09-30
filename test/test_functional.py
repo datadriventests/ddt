@@ -1,5 +1,5 @@
 from ddt import ddt, data
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_is_not_none
 
 
 @ddt
@@ -51,3 +51,28 @@ def test_feed_data():
         values.append(method())
 
     assert_equal(set(values), set([1, 2, 3, 4]))
+
+def test_ddt_data_name_attribute():
+    """Test the ``__name__`` attribute handling of ``data`` items with ``ddt``"""
+
+    def hello():
+        pass
+
+    class myint(int):
+        pass
+
+    class mytest(object):
+        pass
+
+
+    d1 = myint(1)
+    d1.__name__ = 'test_d1'
+
+    d2 = myint(2)
+
+    data_hello = data(d1, d2)(hello)
+    setattr(mytest, 'test_hello', data_hello)
+
+    ddt_mytest = ddt(mytest)
+    assert_is_not_none(getattr(ddt_mytest, 'test_d1'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_2'))
