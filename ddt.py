@@ -26,6 +26,10 @@ def ddt(cls):
 
     For each method decorated with ``@data``, this will effectively create as
     many methods as data items are passed as parameters to ``@data``.
+
+    The names of the test methods follow the pattern ``test_func_name
+    + "_" + str(data)``. If ``data.__name__`` exists, it is used
+    instead for the test method name.
     """
 
     def feed_data(func, *args, **kwargs):
