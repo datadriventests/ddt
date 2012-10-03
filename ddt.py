@@ -26,6 +26,10 @@ def ddt(cls):
 
     For each method decorated with ``@data``, this will effectively create as
     many methods as data items are passed as parameters to ``@data``.
+
+    The names of the test methods follow the pattern ``test_func_name
+    + "_" + str(data)``. If ``data.__name__`` exists, it is used
+    instead for the test method name.
     """
 
     def feed_data(func, *args, **kwargs):
@@ -41,9 +45,8 @@ def ddt(cls):
         if hasattr(f, MAGIC):
             i = 0
             for v in getattr(f, MAGIC):
-                setattr(cls,
-                        "{0}_{1}".format(name, v),
-                        feed_data(f, v))
+                test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
+                setattr(cls, test_name, feed_data(f, v))
                 i = i + 1
             delattr(cls, name)
     return cls
