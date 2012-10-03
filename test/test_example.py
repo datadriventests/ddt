@@ -2,13 +2,16 @@ import unittest
 from ddt import ddt, data
 from mycode import larger_than_two
 
+
 class mylist(list):
     pass
+
 
 def annotated(a, b):
     r = mylist([a, b])
     setattr(r, "__name__", "test_%d_greater_than_%d" % (a, b))
     return r
+
 
 @ddt
 class FooTestCase(unittest.TestCase):

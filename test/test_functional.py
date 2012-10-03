@@ -52,8 +52,11 @@ def test_feed_data():
 
     assert_equal(set(values), set([1, 2, 3, 4]))
 
+
 def test_ddt_data_name_attribute():
-    """Test the ``__name__`` attribute handling of ``data`` items with ``ddt``"""
+    """
+    Test the ``__name__`` attribute handling of ``data`` items with ``ddt``
+    """
 
     def hello():
         pass
@@ -63,7 +66,6 @@ def test_ddt_data_name_attribute():
 
     class mytest(object):
         pass
-
 
     d1 = myint(1)
     d1.__name__ = 'test_d1'
