@@ -26,6 +26,15 @@ def data(*values):
 
 
 def file_data(value):
+    """
+    Method decorator to add to your test methods.
+
+    Should be added to methods of instances of ``unittest.TestCase``.
+
+    ``value`` should be path relative to the directory that the file
+    containing the decorated ``unittest.TestCase`` is in. The file
+    should contain a JSON list of values
+    """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
         return func
