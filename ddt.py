@@ -67,8 +67,7 @@ def ddt(cls):
             cls_path = os.path.abspath(inspect.getsourcefile(cls))
             data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
             if os.path.exists(data_file_path):
-                f = open(data_file_path)
-                data = json.loads(f.read())
+                data = json.loads(open(data_file_path).read())
                 for v in data:
                     test_name = getattr(v, "__name__",
                                         "{0}_{1}".format(name, v))
