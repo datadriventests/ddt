@@ -1,8 +1,16 @@
+import os
+import inspect
+import json
+
 from functools import wraps
 
 __version__ = '0.2.0'
 
-MAGIC = '%values'  # this value cannot conflict with any real python attribute
+# this value cannot conflict with any real python attribute
+DATA_ATTR = '%values'
+
+# store the path to JSON/CSV file ?
+FILE_ATTR = '%file_path'
 
 
 def data(*values):
@@ -12,7 +20,14 @@ def data(*values):
     Should be added to methods of instances of ``unittest.TestCase``.
     """
     def wrapper(func):
-        setattr(func, MAGIC, values)
+        setattr(func, DATA_ATTR, values)
+        return func
+    return wrapper
+
+
+def file_data(value):
+    def wrapper(func):
+        setattr(func, FILE_ATTR, value)
         return func
     return wrapper
 
@@ -42,11 +57,21 @@ def ddt(cls):
         return wrapper
 
     for name, f in cls.__dict__.items():
-        if hasattr(f, MAGIC):
-            i = 0
-            for v in getattr(f, MAGIC):
+        if hasattr(f, DATA_ATTR):
+            for v in getattr(f, DATA_ATTR):
                 test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
                 setattr(cls, test_name, feed_data(f, v))
-                i = i + 1
+            delattr(cls, name)
+        elif hasattr(f, FILE_ATTR):
+            file_attr = getattr(f, FILE_ATTR)
+            cls_path = os.path.abspath(inspect.getsourcefile(cls))
+            data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
+            if os.path.exists(data_file_path):
+                f = open(data_file_path)
+                data = json.loads(f.read())
+                for v in data:
+                    test_name = getattr(v, "__name__",
+                                        "{0}_{1}".format(name, v))
+                    setattr(cls, test_name, feed_data(f, v))
             delattr(cls, name)
     return cls

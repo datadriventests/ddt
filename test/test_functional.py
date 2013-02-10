@@ -1,4 +1,4 @@
-from ddt import ddt, data
+from ddt import ddt, data, file_data
 from nose.tools import assert_equal, assert_is_not_none
 
 
@@ -8,6 +8,10 @@ class Dummy(object):
 
     @data(1, 2, 3, 4)
     def test_something(self, value):
+        return value
+
+    @file_data("test_data.json")
+    def test_something_again(self, value):
         return value
 
 
@@ -28,6 +32,26 @@ def test_data_decorator():
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
     assert_equal(getattr(data_hello, extra_attr), (1, 2))
+
+
+def test_file_data_decorator():
+    """ Test the ``file_data`` method decorator"""
+
+    def hello():
+        pass
+
+    pre_size = len(hello.__dict__)
+    keys = hello.__dict__.keys()
+    data_hello = data("test_data.json")(hello)
+
+    dh_keys = data_hello.__dict__.keys()
+    post_size = len(data_hello.__dict__)
+
+    assert_equal(post_size, pre_size + 1)
+    extra_attrs = set(dh_keys) - set(keys)
+    assert_equal(len(extra_attrs), 1)
+    extra_attr = extra_attrs.pop()
+    assert_equal(getattr(data_hello, extra_attr), ("test_data.json",))
 
 
 is_test = lambda x: x.startswith('test_')

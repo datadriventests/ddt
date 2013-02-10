@@ -1,5 +1,5 @@
 import unittest
-from ddt import ddt, data
+from ddt import ddt, data, file_data
 from mycode import larger_than_two
 
 
@@ -28,3 +28,7 @@ class FooTestCase(unittest.TestCase):
     def test_greater(self, value):
         a, b = value
         self.assertGreater(a, b)
+
+    @file_data('test_data.json')
+    def test_file(self, value):
+        self.assertTrue(larger_than_two(value))
