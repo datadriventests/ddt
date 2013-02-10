@@ -30,5 +30,5 @@ class FooTestCase(unittest.TestCase):
         self.assertGreater(a, b)
 
     @file_data('test_data.json')
-    def test_file(self, value):
+    def test_file_data(self, value):
         self.assertTrue(larger_than_two(value))

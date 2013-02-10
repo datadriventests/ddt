@@ -61,20 +61,20 @@ def test_ddt():
     """Test the ``ddt`` class decorator"""
 
     tests = len(filter(is_test, Dummy.__dict__))
-    assert_equal(tests, 4)
+    assert_equal(tests, 7)
 
 
 def test_feed_data():
     """Test that data is fed to the decorated tests"""
-
     tests = filter(is_test, Dummy.__dict__)
+
     values = []
     obj = Dummy()
     for test in tests:
         method = getattr(obj, test)
         values.append(method())
 
-    assert_equal(set(values), set([1, 2, 3, 4]))
+    assert_equal(set(values), set([1, 2, 3, 4, 10, 12, 15]))
 
 
 def test_ddt_data_name_attribute():
