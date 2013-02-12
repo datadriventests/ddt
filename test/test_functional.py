@@ -94,7 +94,7 @@ def test_file_data_test_names():
     assert_equal(tests, created_tests)
 
 
-def test_feed_data():
+def test_feed_data_data():
     """Test that data is fed to the decorated tests"""
     tests = filter(is_test, Dummy.__dict__)
 
@@ -105,6 +105,19 @@ def test_feed_data():
         values.append(method())
 
     assert_equal(set(values), set([1, 2, 3, 4]))
+
+
+def test_feed_data_file_data():
+    """Test that data is fed to the decorated tests"""
+    tests = filter(is_test, FileDataDummy.__dict__)
+
+    values = []
+    obj = FileDataDummy()
+    for test in tests:
+        method = getattr(obj, test)
+        values.extend(method())
+
+    assert_equal(set(values), set([10, 12, 15, 15, 12, 50]))
 
 
 def test_ddt_data_name_attribute():
