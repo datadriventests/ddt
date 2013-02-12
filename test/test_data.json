@@ -1,1 +1,10 @@
-[10, 12, 15]
+[
+    {
+        "data": [ 10, 12, 15 ],
+        "test_name": "test_one"
+    },
+    {
+        "data": [ 15, 12, 50 ],
+        "test_name": "test_two"
+    }
+]

@@ -9,7 +9,7 @@ __version__ = '0.2.0'
 # this value cannot conflict with any real python attribute
 DATA_ATTR = '%values'
 
-# store the path to JSON/CSV file ?
+# store the path to JSON file
 FILE_ATTR = '%file_path'
 
 
@@ -71,6 +71,7 @@ def ddt(cls):
                 test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
                 setattr(cls, test_name, feed_data(f, v))
             delattr(cls, name)
+
         elif hasattr(f, FILE_ATTR):
             file_attr = getattr(f, FILE_ATTR)
             cls_path = os.path.abspath(inspect.getsourcefile(cls))
@@ -78,8 +79,8 @@ def ddt(cls):
             if os.path.exists(data_file_path):
                 data = json.loads(open(data_file_path).read())
                 for v in data:
-                    test_name = getattr(v, "__name__",
-                                        "{0}_{1}".format(name, v))
-                    setattr(cls, test_name, feed_data(f, v))
+                    #test_name = getattr(v, "__name__",
+                                       #"{0}_{1}".format(name, v['test_name']))
+                    setattr(cls, v['test_name'], feed_data(f, v['data']))
             delattr(cls, name)
     return cls
