@@ -1,3 +1,5 @@
+import os
+import json
 from ddt import ddt, data, file_data
 from nose.tools import assert_equal, assert_is_not_none
 
@@ -9,6 +11,12 @@ class Dummy(object):
     @data(1, 2, 3, 4)
     def test_something(self, value):
         return value
+
+
+@ddt
+class FileDataDummy(object):
+    """Dummy class to test decorators on
+    specifically the file_data decorator"""
 
     @file_data("test_data.json")
     def test_something_again(self, value):
@@ -61,7 +69,29 @@ def test_ddt():
     """Test the ``ddt`` class decorator"""
 
     tests = len(filter(is_test, Dummy.__dict__))
-    assert_equal(tests, 7)
+    assert_equal(tests, 4)
+
+
+def test_file_data_test_creation():
+    """Test that the ``file_data`` decorator creates
+    two tests"""
+
+    tests = len(filter(is_test, FileDataDummy.__dict__))
+    assert_equal(tests, 2)
+
+
+def test_file_data_test_names():
+    """Test that ``file_data`` creates tests with the
+    correct name as specified in the JSON"""
+
+    tests = set(filter(is_test, FileDataDummy.__dict__))
+
+    tests_dir = os.path.dirname(__file__)
+    test_data_path = os.path.join(tests_dir, 'test_data.json')
+    test_data = json.loads(open(test_data_path).read())
+    created_tests = set([v['test_name'] for v in test_data])
+
+    assert_equal(tests, created_tests)
 
 
 def test_feed_data():
@@ -74,7 +104,7 @@ def test_feed_data():
         method = getattr(obj, test)
         values.append(method())
 
-    assert_equal(set(values), set([1, 2, 3, 4, 10, 12, 15]))
+    assert_equal(set(values), set([1, 2, 3, 4]))
 
 
 def test_ddt_data_name_attribute():
