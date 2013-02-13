@@ -41,12 +41,10 @@ def ddt(cls):
             return func(self, *args, **kwargs)
         return wrapper
 
-    for name, f in cls.__dict__.items():
+    for name, f in cls.__dict__.iteritems():
         if hasattr(f, MAGIC):
-            i = 0
-            for v in getattr(f, MAGIC):
+            for i, v in enumerate(getattr(f, MAGIC)):
                 test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
                 setattr(cls, test_name, feed_data(f, v))
-                i = i + 1
             delattr(cls, name)
     return cls
