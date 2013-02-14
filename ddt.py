@@ -31,9 +31,12 @@ def file_data(value):
 
     Should be added to methods of instances of ``unittest.TestCase``.
 
-    ``value`` should be path relative to the directory that the file
-    containing the decorated ``unittest.TestCase`` is in. The file
-    should contain a JSON list of values
+    ``value`` should be a path relative to the directory that the file
+    containing the decorated ``unittest.TestCase``. The file
+    should contain a JSON encoded list of dicts with each dict containing a
+    ``test_name`` and a ``data`` key. The ``test_name`` value should
+    be the name of the test and the value for the ``data`` key should
+    be a list of data values.
     """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
@@ -54,6 +57,15 @@ def ddt(cls):
     The names of the test methods follow the pattern ``test_func_name
     + "_" + str(data)``. If ``data.__name__`` exists, it is used
     instead for the test method name.
+
+    For each method decorated with ``@file_data('test_data.json')``, the
+    decorator will try to load the test_data.json file located relative
+    to the python file containing the method that is decorated. It will,
+    for each ``test_name`` key create as many methods in the list of values
+    from the ``data`` key.
+
+    The names of these test methods follow the pattern of
+    ``test_name`` + str(data)``
     """
 
     def feed_data(func, *args, **kwargs):
@@ -78,6 +90,8 @@ def ddt(cls):
             if os.path.exists(data_file_path):
                 data = json.loads(open(data_file_path).read())
                 for v in data:
-                    setattr(cls, v['test_name'], feed_data(f, v['data']))
+                    test_name = getattr(v, "__name__",
+                                   "{0}_{1}".format(v['test_name'], v['data']))
+                    setattr(cls, test_name, feed_data(f, v['data']))
             delattr(cls, name)
     return cls
