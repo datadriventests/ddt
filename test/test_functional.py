@@ -89,7 +89,8 @@ def test_file_data_test_names():
     tests_dir = os.path.dirname(__file__)
     test_data_path = os.path.join(tests_dir, 'test_data.json')
     test_data = json.loads(open(test_data_path).read())
-    created_tests = set([v['test_name'] for v in test_data])
+    created_tests = set(["{0}_{1}".format(v['test_name'],
+                                    v['data']) for v in test_data])
 
     assert_equal(tests, created_tests)
 
