@@ -67,11 +67,10 @@ def ddt(cls):
 
     for name, f in cls.__dict__.items():
         if hasattr(f, DATA_ATTR):
-            for v in getattr(f, DATA_ATTR):
+            for i, v in enumerate(getattr(f, DATA_ATTR)):
                 test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
                 setattr(cls, test_name, feed_data(f, v))
             delattr(cls, name)
-
         elif hasattr(f, FILE_ATTR):
             file_attr = getattr(f, FILE_ATTR)
             cls_path = os.path.abspath(inspect.getsourcefile(cls))
@@ -79,8 +78,6 @@ def ddt(cls):
             if os.path.exists(data_file_path):
                 data = json.loads(open(data_file_path).read())
                 for v in data:
-                    #test_name = getattr(v, "__name__",
-                                       #"{0}_{1}".format(name, v['test_name']))
                     setattr(cls, v['test_name'], feed_data(f, v['data']))
             delattr(cls, name)
     return cls
