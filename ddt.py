@@ -41,7 +41,7 @@ def ddt(cls):
             return func(self, *args, **kwargs)
         return wrapper
 
-    for name, f in cls.__dict__.iteritems():
+    for name, f in cls.__dict__.items():
         if hasattr(f, MAGIC):
             for i, v in enumerate(getattr(f, MAGIC)):
                 test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
