@@ -1,6 +1,6 @@
 from functools import wraps
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 MAGIC = '%values'  # this value cannot conflict with any real python attribute
 
