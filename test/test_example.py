@@ -16,6 +16,9 @@ def annotated(a, b):
 @ddt
 class FooTestCase(unittest.TestCase):
 
+    def test_undecorated(self):
+        self.assertTrue(larger_than_two(24))
+
     @data(3, 4, 12, 23)
     def test_larger_than_two(self, value):
         self.assertTrue(larger_than_two(value))
@@ -29,6 +32,10 @@ class FooTestCase(unittest.TestCase):
         a, b = value
         self.assertGreater(a, b)
 
-    @file_data('test_data.json')
-    def test_file_data(self, value):
+    @file_data('test_data_dict.json')
+    def test_file_data_dict(self, value):
+        self.assertTrue(has_three_elements(value))
+
+    @file_data('test_data_list.json')
+    def test_file_data_list(self, value):
         self.assertTrue(has_three_elements(value))

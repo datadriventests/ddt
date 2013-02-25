@@ -76,24 +76,31 @@ def ddt(cls):
             return func(self, *args, **kwargs)
         return wrapper
 
-    for name, f in list(cls.__dict__.items()):
-        if hasattr(f, DATA_ATTR):
-            for v in getattr(f, DATA_ATTR):
+    def process_file_data(name, func, file_attr):
+        """
+        Process the parameter in the `file_data` decorator.
+        """
+        cls_path = os.path.abspath(inspect.getsourcefile(cls))
+        data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
+        if os.path.exists(data_file_path):
+            data = json.loads(open(data_file_path).read())
+            for elem in data:
+                if isinstance(data, dict):
+                    key, value = elem, data[elem]
+                    test_name = "{0}_{1}".format(name, key)
+                elif isinstance(data, list):
+                    value = elem
+                    test_name = "{0}_{1}".format(name, value)
+                setattr(cls, test_name, feed_data(func, value))
+
+    for name, func in list(cls.__dict__.items()):
+        if hasattr(func, DATA_ATTR):
+            for v in getattr(func, DATA_ATTR):
                 test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
-                setattr(cls, test_name, feed_data(f, v))
+                setattr(cls, test_name, feed_data(func, v))
             delattr(cls, name)
-        elif hasattr(f, FILE_ATTR):
-            file_attr = getattr(f, FILE_ATTR)
-            cls_path = os.path.abspath(inspect.getsourcefile(cls))
-            data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
-            if os.path.exists(data_file_path):
-                data = json.loads(open(data_file_path).read())
-                for key, value in data.items():
-                    test_name = getattr(
-                        value,
-                        "__name__",
-                        "{0}_{1}".format(key, value)
-                    )
-                    setattr(cls, test_name, feed_data(f, value))
+        elif hasattr(func, FILE_ATTR):
+            file_attr = getattr(func, FILE_ATTR)
+            process_file_data(name, func, file_attr)
             delattr(cls, name)
     return cls
