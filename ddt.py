@@ -78,7 +78,7 @@ def ddt(cls):
 
     for name, f in list(cls.__dict__.items()):
         if hasattr(f, DATA_ATTR):
-            for i, v in enumerate(getattr(f, DATA_ATTR)):
+            for v in getattr(f, DATA_ATTR):
                 test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
                 setattr(cls, test_name, feed_data(f, v))
             delattr(cls, name)
@@ -88,12 +88,12 @@ def ddt(cls):
             data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
             if os.path.exists(data_file_path):
                 data = json.loads(open(data_file_path).read())
-                for v in data:
+                for key, value in data.items():
                     test_name = getattr(
-                        v,
+                        value,
                         "__name__",
-                        "{0}_{1}".format(v['test_name'], v['data'])
+                        "{0}_{1}".format(key, value)
                     )
-                    setattr(cls, test_name, feed_data(f, v['data']))
+                    setattr(cls, test_name, feed_data(f, value))
             delattr(cls, name)
     return cls
