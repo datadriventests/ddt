@@ -18,13 +18,13 @@ def test_data_decorator():
         pass
 
     pre_size = len(hello.__dict__)
-    keys = hello.__dict__.keys()
+    keys = set(hello.__dict__.keys())
     data_hello = data(1, 2)(hello)
-    dh_keys = data_hello.__dict__.keys()
+    dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
 
     assert_equal(post_size, pre_size + 1)
-    extra_attrs = set(dh_keys) - set(keys)
+    extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
     assert_equal(getattr(data_hello, extra_attr), (1, 2))
@@ -36,7 +36,7 @@ is_test = lambda x: x.startswith('test_')
 def test_ddt():
     """Test the ``ddt`` class decorator"""
 
-    tests = len(filter(is_test, Dummy.__dict__))
+    tests = len(list(filter(is_test, Dummy.__dict__)))
     assert_equal(tests, 4)
 
 

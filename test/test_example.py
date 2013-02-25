@@ -1,6 +1,6 @@
 import unittest
 from ddt import ddt, data
-from mycode import larger_than_two
+from .mycode import larger_than_two
 
 
 class mylist(list):
