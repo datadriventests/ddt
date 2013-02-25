@@ -30,9 +30,18 @@ def file_data(value):
 
     Should be added to methods of instances of ``unittest.TestCase``.
 
-    ``value`` should be a path relative to the directory that the file
+    ``value`` should be a path relative to the directory of the file
     containing the decorated ``unittest.TestCase``. The file
-    should contain a JSON encoded list of dicts with each dict containing a
+    should contain JSON encoded data, that can either be a list or a
+    dict.
+
+    In case of a list, each value in the list will correspond to one
+    test case, and the value will be concatenated to the test method
+    name.
+
+    In case of a dict, keys will be used as suffixes to the name of the
+    test case, and values will be fed as test data.
+
     ``test_name`` and a ``data`` key. The ``test_name`` value should
     be the name of the test and the value for the ``data`` key should
     be a list of data values.

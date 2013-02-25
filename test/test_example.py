@@ -1,6 +1,6 @@
 import unittest
 from ddt import ddt, data, file_data
-from .mycode import larger_than_two, has_three_elements
+from .mycode import larger_than_two, has_three_elements, is_a_greeting
 
 
 class mylist(list):
@@ -38,4 +38,4 @@ class FooTestCase(unittest.TestCase):
 
     @file_data('test_data_list.json')
     def test_file_data_list(self, value):
-        self.assertTrue(has_three_elements(value))
+        self.assertTrue(is_a_greeting(value))
