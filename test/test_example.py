@@ -1,6 +1,6 @@
 import unittest
-from ddt import ddt, data
-from .mycode import larger_than_two
+from ddt import ddt, data, file_data
+from .mycode import larger_than_two, has_three_elements
 
 
 class mylist(list):
@@ -28,3 +28,7 @@ class FooTestCase(unittest.TestCase):
     def test_greater(self, value):
         a, b = value
         self.assertGreater(a, b)
+
+    @file_data('test_data.json')
+    def test_file_data(self, value):
+        self.assertTrue(has_three_elements(value))

@@ -2,7 +2,8 @@ Example usage
 =============
 
 DDT consists of a class decorator ``ddt`` (for your ``TestCase`` subclass)
-and a method decorator ``data`` (for your tests that want to be multiplied).
+and a two method decorators ``data`` (for your tests that want to be multiplied)
+and ``file_data`` that will load test data from a file and multiply tests.
 
 This allows you to write your tests as:
 
