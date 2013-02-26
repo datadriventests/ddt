@@ -108,15 +108,4 @@ def ddt(cls):
             file_attr = getattr(func, FILE_ATTR)
             process_file_data(name, func, file_attr)
             delattr(cls, name)
-        elif hasattr(f, FILE_ATTR):
-            file_attr = getattr(f, FILE_ATTR)
-            cls_path = os.path.abspath(inspect.getsourcefile(cls))
-            data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
-            if os.path.exists(data_file_path):
-                data = json.loads(open(data_file_path).read())
-                for v in data:
-                    test_name = getattr(v, "__name__",
-                                   "{0}_{1}".format(v['test_name'], v['data']))
-                    setattr(cls, test_name, feed_data(f, v['data']))
-            delattr(cls, name)
     return cls
