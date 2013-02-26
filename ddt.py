@@ -3,7 +3,7 @@ import json
 import os
 from functools import wraps
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 # this value cannot conflict with any real python attribute
 DATA_ATTR = '%values'
@@ -41,10 +41,6 @@ def file_data(value):
 
     In case of a dict, keys will be used as suffixes to the name of the
     test case, and values will be fed as test data.
-
-    ``test_name`` and a ``data`` key. The ``test_name`` value should
-    be the name of the test and the value for the ``data`` key should
-    be a list of data values.
     """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
