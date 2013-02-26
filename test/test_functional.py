@@ -6,7 +6,9 @@ from nose.tools import assert_equal, assert_is_not_none
 
 @ddt
 class Dummy(object):
-    """Dummy class to test decorators on"""
+    """
+    Dummy class to test the data decorator on
+    """
 
     @data(1, 2, 3, 4)
     def test_something(self, value):
@@ -15,88 +17,102 @@ class Dummy(object):
 
 @ddt
 class FileDataDummy(object):
-    """Dummy class to test decorators on
-    specifically the file_data decorator"""
+    """
+    Dummy class to test the file_data decorator on
+    """
 
-    @file_data("test_data.json")
+    @file_data("test_data_dict.json")
     def test_something_again(self, value):
         return value
 
 
 def test_data_decorator():
-    """Test the ``data`` method decorator"""
+    """
+    Test the ``data`` method decorator
+    """
 
     def hello():
         pass
 
     pre_size = len(hello.__dict__)
-    keys = hello.__dict__.keys()
+    keys = set(hello.__dict__.keys())
     data_hello = data(1, 2)(hello)
-    dh_keys = data_hello.__dict__.keys()
+    dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
 
     assert_equal(post_size, pre_size + 1)
-    extra_attrs = set(dh_keys) - set(keys)
+    extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
     assert_equal(getattr(data_hello, extra_attr), (1, 2))
 
 
-def test_file_data_decorator():
-    """ Test the ``file_data`` method decorator"""
+def test_file_data_decorator_with_dict():
+    """
+    Test the ``file_data`` method decorator
+    """
 
     def hello():
         pass
 
     pre_size = len(hello.__dict__)
-    keys = hello.__dict__.keys()
-    data_hello = data("test_data.json")(hello)
+    keys = set(hello.__dict__.keys())
+    data_hello = data("test_data_dict.json")(hello)
 
-    dh_keys = data_hello.__dict__.keys()
+    dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
 
     assert_equal(post_size, pre_size + 1)
-    extra_attrs = set(dh_keys) - set(keys)
+    extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), ("test_data.json",))
+    assert_equal(getattr(data_hello, extra_attr), ("test_data_dict.json",))
 
 
 is_test = lambda x: x.startswith('test_')
 
 
 def test_ddt():
-    """Test the ``ddt`` class decorator"""
-
-    tests = len(filter(is_test, Dummy.__dict__))
+    """
+    Test the ``ddt`` class decorator
+    """
+    tests = len(list(filter(is_test, Dummy.__dict__)))
     assert_equal(tests, 4)
 
 
 def test_file_data_test_creation():
-    """Test that the ``file_data`` decorator creates
-    two tests"""
+    """
+    Test that the ``file_data`` decorator creates two tests
+    """
 
-    tests = len(filter(is_test, FileDataDummy.__dict__))
+    tests = len(list(filter(is_test, FileDataDummy.__dict__)))
     assert_equal(tests, 2)
 
 
-def test_file_data_test_names():
-    """Test that ``file_data`` creates tests with the
-    correct name as specified in the JSON"""
+def test_file_data_test_names_dict():
+    """
+    Test that ``file_data`` creates tests with the correct name
+
+    Name is the the function name plus the key in the JSON data,
+    when it is parsed as a dictionary.
+    """
 
     tests = set(filter(is_test, FileDataDummy.__dict__))
 
     tests_dir = os.path.dirname(__file__)
-    test_data_path = os.path.join(tests_dir, 'test_data.json')
+    test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
-    created_tests = set(["{0}_{1}".format(v['test_name'],
-                                    v['data']) for v in test_data])
+    created_tests = set([
+        "test_something_again_{0}".format(name) for name in test_data.keys()
+    ])
 
     assert_equal(tests, created_tests)
 
 
 def test_feed_data_data():
-    """Test that data is fed to the decorated tests"""
+    """
+    Test that data is fed to the decorated tests
+    """
     tests = filter(is_test, Dummy.__dict__)
 
     values = []
@@ -109,7 +125,9 @@ def test_feed_data_data():
 
 
 def test_feed_data_file_data():
-    """Test that data is fed to the decorated tests"""
+    """
+    Test that data is fed to the decorated tests from a file
+    """
     tests = filter(is_test, FileDataDummy.__dict__)
 
     values = []
