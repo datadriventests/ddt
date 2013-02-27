@@ -157,7 +157,6 @@ def test_feed_data_file_data_missing_json():
     """
     tests = filter(is_test, FileDataMissingDummy.__dict__)
 
-    values = []
     obj = FileDataMissingDummy()
     for test in tests:
         method = getattr(obj, test)
