@@ -1,7 +1,7 @@
 import os
 import json
 from ddt import ddt, data, file_data
-from nose.tools import assert_equal, assert_is_not_none
+from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
 
 @ddt
@@ -22,6 +22,18 @@ class FileDataDummy(object):
     """
 
     @file_data("test_data_dict.json")
+    def test_something_again(self, value):
+        return value
+
+
+@ddt
+class FileDataMissingDummy(object):
+    """
+    Dummy class to test the file_data decorator on when
+    JSON file is missing
+    """
+
+    @file_data("test_data_dict_missing.json")
     def test_something_again(self, value):
         return value
 
@@ -137,6 +149,19 @@ def test_feed_data_file_data():
         values.extend(method())
 
     assert_equal(set(values), set([10, 12, 15, 15, 12, 50]))
+
+
+def test_feed_data_file_data_missing_json():
+    """
+    Test that a ValueError is raised
+    """
+    tests = filter(is_test, FileDataMissingDummy.__dict__)
+
+    values = []
+    obj = FileDataMissingDummy()
+    for test in tests:
+        method = getattr(obj, test)
+        assert_raises(ValueError, method)
 
 
 def test_ddt_data_name_attribute():

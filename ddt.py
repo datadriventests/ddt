@@ -87,7 +87,14 @@ def ddt(cls):
         """
         cls_path = os.path.abspath(inspect.getsourcefile(cls))
         data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
-        if os.path.exists(data_file_path):
+
+        def _raise_ve(*args):
+            raise ValueError("%s does not exist" % file_attr)
+
+        if os.path.exists(data_file_path) is False:
+            test_name = "{0}_{1}".format(name, "error")
+            setattr(cls, test_name, feed_data(_raise_ve, None))
+        else:
             data = json.loads(open(data_file_path).read())
             for elem in data:
                 if isinstance(data, dict):
