@@ -3,7 +3,7 @@ import json
 import os
 from functools import wraps
 
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 
 # this value cannot conflict with any real python attribute
 DATA_ATTR = '%values'
