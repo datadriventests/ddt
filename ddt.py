@@ -108,7 +108,7 @@ def ddt(cls):
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
             for v in getattr(func, DATA_ATTR):
-                test_name = getattr(v, "__name__", "{0}_{1}".format(name, v))
+                test_name = "{0}_{1}".format(name, getattr(v, "__name__", v))
                 setattr(cls, test_name, feed_data(func, v))
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):

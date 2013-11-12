@@ -178,7 +178,7 @@ def test_ddt_data_name_attribute():
         pass
 
     d1 = myint(1)
-    d1.__name__ = 'test_d1'
+    d1.__name__ = 'data1'
 
     d2 = myint(2)
 
@@ -186,5 +186,5 @@ def test_ddt_data_name_attribute():
     setattr(mytest, 'test_hello', data_hello)
 
     ddt_mytest = ddt(mytest)
-    assert_is_not_none(getattr(ddt_mytest, 'test_d1'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_data1'))
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_2'))
