@@ -48,6 +48,13 @@ def file_data(value):
     return wrapper
 
 
+def mk_test_name(name, value):
+    """
+    Generate a new name for the test named ``name``, appending ``value``
+    """
+    return "{0}_{1}".format(name, unicode(value).encode('ascii', 'backslashreplace'))
+
+
 def ddt(cls):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
@@ -92,23 +99,23 @@ def ddt(cls):
             raise ValueError("%s does not exist" % file_attr)
 
         if os.path.exists(data_file_path) is False:
-            test_name = "{0}_{1}".format(name, "error")
+            test_name = mk_test_name(name, "error")
             setattr(cls, test_name, feed_data(_raise_ve, None))
         else:
             data = json.loads(open(data_file_path).read())
             for elem in data:
                 if isinstance(data, dict):
                     key, value = elem, data[elem]
-                    test_name = "{0}_{1}".format(name, key)
+                    test_name = mk_test_name(name, key)
                 elif isinstance(data, list):
                     value = elem
-                    test_name = "{0}_{1}".format(name, value)
+                    test_name = mk_test_name(name, value)
                 setattr(cls, test_name, feed_data(func, value))
 
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
             for v in getattr(func, DATA_ATTR):
-                test_name = "{0}_{1}".format(name, getattr(v, "__name__", v))
+                test_name = mk_test_name(name, getattr(v, "__name__", v))
                 setattr(cls, test_name, feed_data(func, v))
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):

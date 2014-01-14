@@ -188,3 +188,22 @@ def test_ddt_data_name_attribute():
     ddt_mytest = ddt(mytest)
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_data1'))
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_2'))
+
+
+def test_ddt_data_unicode():
+    """
+    Test that unicode strings are converted to function names correctly
+    """
+
+    def hello():
+        pass
+
+    @ddt
+    class mytest(object):
+        @data(u"ascii", u"non-ascii-\N{SNOWMAN}", {u"\N{SNOWMAN}": "data"})
+        def test_hello(self, val):
+            pass
+
+    assert_is_not_none(getattr(mytest, 'test_hello_ascii'))
+    assert_is_not_none(getattr(mytest, 'test_hello_non-ascii-\\u2603'))
+    assert_is_not_none(getattr(mytest, """test_hello_{u'\\u2603': 'data'}"""))
