@@ -52,7 +52,13 @@ def mk_test_name(name, value):
     """
     Generate a new name for the test named ``name``, appending ``value``
     """
-    return "{0}_{1}".format(name, unicode(value).encode('ascii', 'backslashreplace'))
+    try:
+        return "{0}_{1}".format(name, value)
+    except UnicodeEncodeError:
+        # fallback for python2
+        return "{0}_{1}".format(
+            name, value.encode('ascii', 'backslashreplace')
+        )
 
 
 def ddt(cls):
