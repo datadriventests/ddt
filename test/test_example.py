@@ -39,3 +39,7 @@ class FooTestCase(unittest.TestCase):
     @file_data('test_data_list.json')
     def test_file_data_list(self, value):
         self.assertTrue(is_a_greeting(value))
+
+    @data(u'ascii', u'non-ascii-\N{SNOWMAN}')
+    def test_unicode(self, value):
+        self.assertIn(value, (u'ascii', u'non-ascii-\N{SNOWMAN}'))
