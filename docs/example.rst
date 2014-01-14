@@ -25,12 +25,12 @@ and ``test_data_list.json``:
 And then run them with::
 
     $ nosetests -v test/test_example.py
-    test_10_greater_than_5 (test.test_example.FooTestCase) ... ok
-    test_2_greater_than_1 (test.test_example.FooTestCase) ... ok
     test_file_data_dict_sorted_list (test.test_example.FooTestCase) ... ok
     test_file_data_dict_unsorted_list (test.test_example.FooTestCase) ... ok
     test_file_data_list_Goodbye (test.test_example.FooTestCase) ... ok
     test_file_data_list_Hello (test.test_example.FooTestCase) ... ok
+    test_greater_test_10_greater_than_5 (test.test_example.FooTestCase) ... ok
+    test_greater_test_2_greater_than_1 (test.test_example.FooTestCase) ... ok
     test_larger_than_two_12 (test.test_example.FooTestCase) ... ok
     test_larger_than_two_23 (test.test_example.FooTestCase) ... ok
     test_larger_than_two_3 (test.test_example.FooTestCase) ... ok
@@ -40,10 +40,12 @@ And then run them with::
     test_not_larger_than_two_1 (test.test_example.FooTestCase) ... ok
     test_not_larger_than_two_2 (test.test_example.FooTestCase) ... ok
     test_undecorated (test.test_example.FooTestCase) ... ok
+    test_unicode_ascii (test.test_example.FooTestCase) ... ok
+    test_unicode_non-ascii-\u2603 (test.test_example.FooTestCase) ... ok
 
     ----------------------------------------------------------------------
-    Ran 15 tests in 0.002s
+    Ran 17 tests in 0.002s
 
     OK
 
-6 test methods + some *magic* decorators = 15 test cases.
+7 test methods + some *magic* decorators = 17 test cases.
