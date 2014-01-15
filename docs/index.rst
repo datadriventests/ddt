@@ -7,6 +7,9 @@ multiple test cases.
 
 You can find (and fork) the project in https://github.com/txels/ddt.
 
+DDT should work on Python2 and Python3, but we only officially test it for
+versions 2.7 and 3.3.
+
 Contents:
 
 .. toctree::
