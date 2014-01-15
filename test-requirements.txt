@@ -1,5 +1,5 @@
-nose
-pep8
 coverage
 flake8
-Sphinx
+nose
+pep8
+six

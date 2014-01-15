@@ -1,5 +1,8 @@
 import os
 import json
+
+import six
+
 from ddt import ddt, data, file_data
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
@@ -188,3 +191,40 @@ def test_ddt_data_name_attribute():
     ddt_mytest = ddt(mytest)
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_data1'))
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_2'))
+
+
+def test_ddt_data_unicode():
+    """
+    Test that unicode strings are converted to function names correctly
+    """
+
+    def hello():
+        pass
+
+    # We test unicode support separately for python 2 and 3
+
+    if six.PY2:
+
+        @ddt
+        class mytest(object):
+            @data(u'ascii', u'non-ascii-\N{SNOWMAN}', {u'\N{SNOWMAN}': 'data'})
+            def test_hello(self, val):
+                pass
+
+        assert_is_not_none(getattr(mytest, 'test_hello_ascii'))
+        assert_is_not_none(getattr(mytest, 'test_hello_non-ascii-\\u2603'))
+        assert_is_not_none(
+            getattr(mytest, """test_hello_{u'\\u2603': 'data'}"""))
+
+    elif six.PY3:
+
+        @ddt
+        class mytest(object):
+            @data('ascii', 'non-ascii-\N{SNOWMAN}', {'\N{SNOWMAN}': 'data'})
+            def test_hello(self, val):
+                pass
+
+        assert_is_not_none(getattr(mytest, 'test_hello_ascii'))
+        assert_is_not_none(getattr(mytest, 'test_hello_non-ascii-\N{SNOWMAN}'))
+        assert_is_not_none(
+            getattr(mytest, """test_hello_{'\N{SNOWMAN}': 'data'}"""))
