@@ -1,6 +1,6 @@
 import unittest
 from ddt import ddt, data, file_data
-from .mycode import larger_than_two, has_three_elements, is_a_greeting
+from test.mycode import larger_than_two, has_three_elements, is_a_greeting
 
 
 class mylist(list):
@@ -15,7 +15,6 @@ def annotated(a, b):
 
 @ddt
 class FooTestCase(unittest.TestCase):
-
     def test_undecorated(self):
         self.assertTrue(larger_than_two(24))
 
@@ -39,6 +38,10 @@ class FooTestCase(unittest.TestCase):
     @file_data('test_data_list.json')
     def test_file_data_list(self, value):
         self.assertTrue(is_a_greeting(value))
+
+    @data((3, 2), (4, 3), (5, 3))
+    def test_tuples_extracted_into_multiple_arguments(self, first_value, second_value):
+        self.assertTrue(first_value > second_value)
 
     @data(u'ascii', u'non-ascii-\N{SNOWMAN}')
     def test_unicode(self, value):

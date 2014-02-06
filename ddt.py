@@ -122,7 +122,10 @@ def ddt(cls):
         if hasattr(func, DATA_ATTR):
             for v in getattr(func, DATA_ATTR):
                 test_name = mk_test_name(name, getattr(v, "__name__", v))
-                setattr(cls, test_name, feed_data(func, v))
+                if type(v) is tuple:
+                    setattr(cls, test_name, feed_data(func, *v))
+                else:
+                    setattr(cls, test_name, feed_data(func, v))
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
