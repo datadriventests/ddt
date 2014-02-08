@@ -7,6 +7,13 @@ and two method decorators (for your tests that want to be multiplied):
 * ``data``: contains as many arguments as values you want to feed to the test.
 * ``file_data``: will load test data from a JSON file.
 
+Normally each value within ``data`` will be passed as a single argument to
+your test method. If these values are e.g. tuples, you will have to unpack them
+inside your test. Alternatively, you can use an additional decorator,
+``unpack``, that will automatically unpack tuples and lists into multiple
+arguments, and dictionaries into multiple keyword arguments. See examples
+below.
+
 This allows you to write your tests as:
 
 .. literalinclude:: ../test/test_example.py
