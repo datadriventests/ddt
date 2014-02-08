@@ -5,26 +5,30 @@ from functools import wraps
 
 __version__ = '0.6.0'
 
-# this value cannot conflict with any real python attribute
-DATA_ATTR = '%values'
+# These attributes will not conflict with any real python attribute
+# They are added to the decorated test method and processed later
+# by the `ddt` class decorator.
 
-# store the path to JSON file
-FILE_ATTR = '%file_path'
+DATA_ATTR = '%values'      # store the data the test must run with
+FILE_ATTR = '%file_path'   # store the path to JSON file
+UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
 
-UNPACK_ATTR = '%unpack'
 
 def unpack(func):
     """
-    Method decorator to add unpack feature
+    Method decorator to add unpack feature.
+
     """
     setattr(func, UNPACK_ATTR, True)
     return func
+
 
 def data(*values):
     """
     Method decorator to add to your test methods.
 
     Should be added to methods of instances of ``unittest.TestCase``.
+
     """
     def wrapper(func):
         setattr(func, DATA_ATTR, values)
@@ -49,6 +53,7 @@ def file_data(value):
 
     In case of a dict, keys will be used as suffixes to the name of the
     test case, and values will be fed as test data.
+
     """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
@@ -58,7 +63,8 @@ def file_data(value):
 
 def mk_test_name(name, value):
     """
-    Generate a new name for the test named ``name``, appending ``value``
+    Generate a new name for the test named ``name``, appending ``value``.
+
     """
     try:
         return "{0}_{1}".format(name, value)
@@ -91,11 +97,13 @@ def ddt(cls):
 
     The names of these test methods follow the pattern of
     ``test_name`` + str(data)``
+
     """
 
     def feed_data(func, *args, **kwargs):
         """
         This internal method decorator feeds the test data item to the test.
+
         """
         @wraps(func)
         def wrapper(self):
@@ -105,6 +113,7 @@ def ddt(cls):
     def process_file_data(name, func, file_attr):
         """
         Process the parameter in the `file_data` decorator.
+
         """
         cls_path = os.path.abspath(inspect.getsourcefile(cls))
         data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
@@ -131,12 +140,14 @@ def ddt(cls):
             for v in getattr(func, DATA_ATTR):
                 test_name = mk_test_name(name, getattr(v, "__name__", v))
                 if hasattr(func, UNPACK_ATTR):
-                    if type(v) is tuple or type(v) is list:
-                        setattr(cls, test_name, feed_data(func, *v))
+                    if isinstance(v, tuple) or isinstance(v, list):
+                        decorated = feed_data(func, *v)
                     else:
-                        setattr(cls, test_name, feed_data(func, **v))
+                        # unpack dictionary
+                        decorated = feed_data(func, **v)
                 else:
-                    setattr(cls, test_name, feed_data(func, v))
+                    decorated = feed_data(func, v)
+                setattr(cls, test_name, decorated)
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
