@@ -11,6 +11,14 @@ DATA_ATTR = '%values'
 # store the path to JSON file
 FILE_ATTR = '%file_path'
 
+UNPACK_ATTR = '%unpack'
+
+def unpack(func):
+    """
+    Method decorator to add unpack feature
+    """
+    setattr(func, UNPACK_ATTR, True)
+    return func
 
 def data(*values):
     """
@@ -122,7 +130,13 @@ def ddt(cls):
         if hasattr(func, DATA_ATTR):
             for v in getattr(func, DATA_ATTR):
                 test_name = mk_test_name(name, getattr(v, "__name__", v))
-                setattr(cls, test_name, feed_data(func, v))
+                if hasattr(func, UNPACK_ATTR):
+                    if type(v) is tuple or type(v) is list:
+                        setattr(cls, test_name, feed_data(func, *v))
+                    else:
+                        setattr(cls, test_name, feed_data(func, **v))
+                else:
+                    setattr(cls, test_name, feed_data(func, v))
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
