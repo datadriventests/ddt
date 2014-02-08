@@ -3,7 +3,7 @@ import json
 import os
 from functools import wraps
 
-__version__ = '0.6.0'
+__version__ = '0.7.0'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
