@@ -1,5 +1,5 @@
 import unittest
-from ddt import ddt, data, file_data
+from ddt import ddt, data, file_data, unpack
 from test.mycode import larger_than_two, has_three_elements, is_a_greeting
 
 
@@ -40,8 +40,20 @@ class FooTestCase(unittest.TestCase):
         self.assertTrue(is_a_greeting(value))
 
     @data((3, 2), (4, 3), (5, 3))
+    @unpack
     def test_tuples_extracted_into_multiple_arguments(self, first_value, second_value):
         self.assertTrue(first_value > second_value)
+
+    @data([3, 2], [4, 3], [5, 3])
+    @unpack
+    def test_list_extracted_into_multiple_arguments(self, first_value, second_value):
+        self.assertTrue(first_value > second_value)
+
+    @unpack
+    @data({'first': 1, 'second': 3, 'third': 2}, {'first': 4, 'second': 6, 'third': 5})
+    def test_extraction_into_kwargs(self, first, second, third):
+        self.assertTrue(first < third < second)
+
 
     @data(u'ascii', u'non-ascii-\N{SNOWMAN}')
     def test_unicode(self, value):
