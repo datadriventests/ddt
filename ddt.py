@@ -3,7 +3,7 @@ import json
 import os
 from functools import wraps
 
-__version__ = '0.7.0'
+__version__ = '0.7.1'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
@@ -100,7 +100,7 @@ def ddt(cls):
 
     """
 
-    def feed_data(func, *args, **kwargs):
+    def feed_data(func, new_name, *args, **kwargs):
         """
         This internal method decorator feeds the test data item to the test.
 
@@ -108,7 +108,18 @@ def ddt(cls):
         @wraps(func)
         def wrapper(self):
             return func(self, *args, **kwargs)
+        wrapper.__name__ = new_name
         return wrapper
+
+    def add_test(test_name, func, *args, **kwargs):
+        """
+        Add a test case to this class.
+
+        The test will be based on an existing function but will give it a new
+        name.
+
+        """
+        setattr(cls, test_name, feed_data(func, test_name, *args, **kwargs))
 
     def process_file_data(name, func, file_attr):
         """
@@ -123,7 +134,7 @@ def ddt(cls):
 
         if os.path.exists(data_file_path) is False:
             test_name = mk_test_name(name, "error")
-            setattr(cls, test_name, feed_data(_raise_ve, None))
+            add_test(test_name, _raise_ve, None)
         else:
             data = json.loads(open(data_file_path).read())
             for elem in data:
@@ -133,7 +144,7 @@ def ddt(cls):
                 elif isinstance(data, list):
                     value = elem
                     test_name = mk_test_name(name, value)
-                setattr(cls, test_name, feed_data(func, value))
+                add_test(test_name, func, value)
 
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
@@ -141,13 +152,12 @@ def ddt(cls):
                 test_name = mk_test_name(name, getattr(v, "__name__", v))
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        decorated = feed_data(func, *v)
+                        add_test(test_name, func, *v)
                     else:
                         # unpack dictionary
-                        decorated = feed_data(func, **v)
+                        add_test(test_name, func, **v)
                 else:
-                    decorated = feed_data(func, v)
-                setattr(cls, test_name, decorated)
+                    add_test(test_name, func, v)
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
