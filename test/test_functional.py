@@ -19,6 +19,18 @@ class Dummy(object):
 
 
 @ddt
+class DummyInvalidIdentifier():
+    """
+    Dummy class to test the data decorator receiving values invalid characters
+    indentifiers
+    """
+
+    @data('32v2 g #Gmw845h$W b53wi.')
+    def test_data_with_invalid_identifier(self, value):
+        return value
+
+
+@ddt
 class FileDataDummy(object):
     """
     Dummy class to test the file_data decorator on
@@ -212,9 +224,9 @@ def test_ddt_data_unicode():
                 pass
 
         assert_is_not_none(getattr(mytest, 'test_hello_ascii'))
-        assert_is_not_none(getattr(mytest, 'test_hello_non-ascii-\\u2603'))
+        assert_is_not_none(getattr(mytest, 'test_hello_non_ascii__u2603'))
         assert_is_not_none(
-            getattr(mytest, """test_hello_{u'\\u2603': 'data'}"""))
+            getattr(mytest, """test_hello__u__u2603____data__"""))
 
     elif six.PY3:
 
@@ -225,6 +237,20 @@ def test_ddt_data_unicode():
                 pass
 
         assert_is_not_none(getattr(mytest, 'test_hello_ascii'))
-        assert_is_not_none(getattr(mytest, 'test_hello_non-ascii-\N{SNOWMAN}'))
+        assert_is_not_none(getattr(mytest, 'test_hello_non_ascii__'))
         assert_is_not_none(
-            getattr(mytest, """test_hello_{'\N{SNOWMAN}': 'data'}"""))
+            getattr(mytest, """test_hello________data__"""))
+
+
+def test_feed_data_with_invalid_identifier():
+    """
+    Test that data is fed to the decorated tests
+    """
+    tests = list(filter(is_test, DummyInvalidIdentifier.__dict__))
+    assert_equal(len(tests), 1)
+
+    obj = DummyInvalidIdentifier()
+    method = getattr(obj, tests[0])
+    assert_equal(method.__name__,
+                 'test_data_with_invalid_identifier_32v2_g__Gmw845h_W_b53wi_')
+    assert_equal(method(), '32v2 g #Gmw845h$W b53wi.')
