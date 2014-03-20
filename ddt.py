@@ -1,6 +1,7 @@
 import inspect
 import json
 import os
+import re
 from functools import wraps
 
 __version__ = '0.7.1'
@@ -67,12 +68,13 @@ def mk_test_name(name, value):
 
     """
     try:
-        return "{0}_{1}".format(name, value)
+        test_name = "{0}_{1}".format(name, value)
     except UnicodeEncodeError:
         # fallback for python2
-        return "{0}_{1}".format(
+        test_name = "{0}_{1}".format(
             name, value.encode('ascii', 'backslashreplace')
         )
+    return re.sub('\W|^(?=\d)', '_', test_name)
 
 
 def ddt(cls):
