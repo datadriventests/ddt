@@ -38,3 +38,7 @@ And then run them with your favourite test runner, e.g. if you use nose::
 
 The number of test cases actually run and reported separately has been
 multiplied.
+
+
+DDT will try to give the new test cases meaningful names by converting the
+data values to valid python identifiers.

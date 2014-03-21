@@ -4,7 +4,7 @@ import os
 import re
 from functools import wraps
 
-__version__ = '0.7.1'
+__version__ = '0.8.0'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
@@ -62,18 +62,21 @@ def file_data(value):
     return wrapper
 
 
-def mk_test_name(name, value):
+def mk_test_name(name, value, index=0):
     """
-    Generate a new name for the test named ``name``, appending ``value``.
+    Generate a new name for a test case.
+
+    It will take the original test name and append an ordinal index and a
+    string representation of the value, and convert the result into a valid
+    python identifier by replacing extraneous characters with ``_``.
 
     """
     try:
-        test_name = "{0}_{1}".format(name, value)
+        value = str(value)
     except UnicodeEncodeError:
         # fallback for python2
-        test_name = "{0}_{1}".format(
-            name, value.encode('ascii', 'backslashreplace')
-        )
+        value = value.encode('ascii', 'backslashreplace')
+    test_name = "{0}_{1}_{2}".format(name, index + 1, value)
     return re.sub('\W|^(?=\d)', '_', test_name)
 
 
@@ -87,9 +90,12 @@ def ddt(cls):
     For each method decorated with ``@data``, this will effectively create as
     many methods as data items are passed as parameters to ``@data``.
 
-    The names of the test methods follow the pattern ``test_func_name
-    + "_" + str(data)``. If ``data.__name__`` exists, it is used
-    instead for the test method name.
+    The names of the test methods follow the pattern
+    ``original_test_name_{ordinal}_{data}``. ``ordinal`` is the position of the
+    data argument, starting with 1.
+
+    For data we use a string representation of the data value converted into a
+    valid python identifier.  If ``data.__name__`` exists, we use that instead.
 
     For each method decorated with ``@file_data('test_data.json')``, the
     decorator will try to load the test_data.json file located relative
@@ -97,11 +103,7 @@ def ddt(cls):
     for each ``test_name`` key create as many methods in the list of values
     from the ``data`` key.
 
-    The names of these test methods follow the pattern of
-    ``test_name`` + str(data)``
-
     """
-
     def feed_data(func, new_name, *args, **kwargs):
         """
         This internal method decorator feeds the test data item to the test.
@@ -139,19 +141,19 @@ def ddt(cls):
             add_test(test_name, _raise_ve, None)
         else:
             data = json.loads(open(data_file_path).read())
-            for elem in data:
+            for i, elem in enumerate(data):
                 if isinstance(data, dict):
                     key, value = elem, data[elem]
-                    test_name = mk_test_name(name, key)
+                    test_name = mk_test_name(name, key, i)
                 elif isinstance(data, list):
                     value = elem
-                    test_name = mk_test_name(name, value)
+                    test_name = mk_test_name(name, value, i)
                 add_test(test_name, func, value)
 
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
-            for v in getattr(func, DATA_ATTR):
-                test_name = mk_test_name(name, getattr(v, "__name__", v))
+            for i, v in enumerate(getattr(func, DATA_ATTR)):
+                test_name = mk_test_name(name, getattr(v, "__name__", v), i)
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
                         add_test(test_name, func, *v)

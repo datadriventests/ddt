@@ -130,7 +130,8 @@ def test_file_data_test_names_dict():
     test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
     created_tests = set([
-        "test_something_again_{0}".format(name) for name in test_data.keys()
+        "test_something_again_{0}_{1}".format(index + 1, name)
+        for index, name in enumerate(test_data.keys())
     ])
 
     assert_equal(tests, created_tests)
@@ -201,8 +202,8 @@ def test_ddt_data_name_attribute():
     setattr(mytest, 'test_hello', data_hello)
 
     ddt_mytest = ddt(mytest)
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_data1'))
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_2'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_1_data1'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_2_2'))
 
 
 def test_ddt_data_unicode():
@@ -223,10 +224,9 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(mytest, 'test_hello_ascii'))
-        assert_is_not_none(getattr(mytest, 'test_hello_non_ascii__u2603'))
-        assert_is_not_none(
-            getattr(mytest, """test_hello__u__u2603____data__"""))
+        assert_is_not_none(getattr(mytest, 'test_hello_1_ascii'))
+        assert_is_not_none(getattr(mytest, 'test_hello_2_non_ascii__u2603'))
+        assert_is_not_none(getattr(mytest, 'test_hello_3__u__u2603____data__'))
 
     elif six.PY3:
 
@@ -236,10 +236,9 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(mytest, 'test_hello_ascii'))
-        assert_is_not_none(getattr(mytest, 'test_hello_non_ascii__'))
-        assert_is_not_none(
-            getattr(mytest, """test_hello________data__"""))
+        assert_is_not_none(getattr(mytest, 'test_hello_1_ascii'))
+        assert_is_not_none(getattr(mytest, 'test_hello_2_non_ascii__'))
+        assert_is_not_none(getattr(mytest, 'test_hello_3________data__'))
 
 
 def test_feed_data_with_invalid_identifier():
@@ -251,6 +250,8 @@ def test_feed_data_with_invalid_identifier():
 
     obj = DummyInvalidIdentifier()
     method = getattr(obj, tests[0])
-    assert_equal(method.__name__,
-                 'test_data_with_invalid_identifier_32v2_g__Gmw845h_W_b53wi_')
+    assert_equal(
+        method.__name__,
+        'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
+    )
     assert_equal(method(), '32v2 g #Gmw845h$W b53wi.')
