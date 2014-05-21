@@ -2,6 +2,7 @@ import inspect
 import json
 import os
 import re
+import sys
 from functools import wraps
 
 __version__ = '0.8.0'
@@ -70,7 +71,22 @@ def mk_test_name(name, value, index=0):
     string representation of the value, and convert the result into a valid
     python identifier by replacing extraneous characters with ``_``.
 
+    If hash randomization is enabled (a feature available since 2.7.3
+    and enabled by default since 3.3) and a non-scalar value is passed
+    this will omit the name argument by default. Set `PYTHONHASHSEED`
+    to a fixed value before running tests in these cases to get the
+    names back consistently.
+
     """
+
+    print(sys.flags)
+
+    if sys.hexversion >= 0x02070300 and \
+            sys.flags.hash_randomization and \
+            'PYTHONHASHSEED' not in os.environ and \
+            not isinstance(value, (type(None), str, int, float)):
+        return "{0}_{1}".format(name, index + 1)
+
     try:
         value = str(value)
     except UnicodeEncodeError:

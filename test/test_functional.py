@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 
 import six
 
@@ -238,7 +239,10 @@ def test_ddt_data_unicode():
 
         assert_is_not_none(getattr(mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr(mytest, 'test_hello_2_non_ascii__'))
-        assert_is_not_none(getattr(mytest, 'test_hello_3________data__'))
+        if sys.hexversion >= 0x03030300 and 'PYTHONHASHSEED' not in os.environ:
+            assert_is_not_none(getattr(mytest, 'test_hello_3'))
+        else:
+            assert_is_not_none(getattr(mytest, 'test_hello_3________data__'))
 
 
 def test_feed_data_with_invalid_identifier():
