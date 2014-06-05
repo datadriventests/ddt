@@ -230,7 +230,8 @@ def test_ddt_data_unicode():
         if is_hash_randomized():
             assert_is_not_none(getattr(mytest, 'test_hello_3'))
         else:
-            assert_is_not_none(getattr(mytest, 'test_hello_3__u__u2603____data__'))
+            assert_is_not_none(getattr(mytest,
+                                       'test_hello_3__u__u2603____data__'))
 
     elif six.PY3:
 
