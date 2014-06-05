@@ -4,7 +4,7 @@ import sys
 
 import six
 
-from ddt import ddt, data, file_data
+from ddt import ddt, data, file_data, is_hash_randomized
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
 
@@ -227,7 +227,10 @@ def test_ddt_data_unicode():
 
         assert_is_not_none(getattr(mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr(mytest, 'test_hello_2_non_ascii__u2603'))
-        assert_is_not_none(getattr(mytest, 'test_hello_3__u__u2603____data__'))
+        if is_hash_randomized():
+            assert_is_not_none(getattr(mytest, 'test_hello_3'))
+        else:
+            assert_is_not_none(getattr(mytest, 'test_hello_3__u__u2603____data__'))
 
     elif six.PY3:
 
@@ -239,7 +242,7 @@ def test_ddt_data_unicode():
 
         assert_is_not_none(getattr(mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr(mytest, 'test_hello_2_non_ascii__'))
-        if sys.hexversion >= 0x03030300 and 'PYTHONHASHSEED' not in os.environ:
+        if is_hash_randomized():
             assert_is_not_none(getattr(mytest, 'test_hello_3'))
         else:
             assert_is_not_none(getattr(mytest, 'test_hello_3________data__'))

@@ -63,6 +63,14 @@ def file_data(value):
     return wrapper
 
 
+def is_hash_randomized():
+    return (((sys.hexversion >= 0x02070300 and
+              sys.hexversion < 0x03000000) or
+             (sys.hexversion >= 0x03020300)) and
+            sys.flags.hash_randomization and
+            'PYTHONHASHSEED' not in os.environ)
+
+
 def mk_test_name(name, value, index=0):
     """
     Generate a new name for a test case.
@@ -71,20 +79,45 @@ def mk_test_name(name, value, index=0):
     string representation of the value, and convert the result into a valid
     python identifier by replacing extraneous characters with ``_``.
 
-    If hash randomization is enabled (a feature available since 2.7.3
-    and enabled by default since 3.3) and a non-scalar value is passed
+    If hash randomization is enabled (a feature available since 2.7.3/3.2.3
+    and enabled by default since 3.3) and a "non-trivial" value is passed
     this will omit the name argument by default. Set `PYTHONHASHSEED`
     to a fixed value before running tests in these cases to get the
-    names back consistently.
+    names back consistently or use the `__name__` attribute on data values.
+
+    A "trivial" value is a plain scalar, or a tuple or list consisting
+    only of trivial values.
 
     """
 
-    print(sys.flags)
+    # We avoid doing str(value) if all of the following hold:
+    #
+    # * Python version is 2.7.3 or newer (for 2 series) or 3.2.3 or
+    #   newer (for 3 series). Also sys.flags.hash_randomization didn't
+    #   exist before these.
+    # * sys.flags.hash_randomization is set to True
+    # * PYTHONHASHSEED is **not** defined in the environment
+    # * Given `value` argument is not a trivial scalar (None, str,
+    #   int, float).
+    #
+    # Trivial scalar values are passed as is in all cases.
 
-    if sys.hexversion >= 0x02070300 and \
-            sys.flags.hash_randomization and \
-            'PYTHONHASHSEED' not in os.environ and \
-            not isinstance(value, (type(None), str, int, float)):
+    trivial_types = (type(None), bool, str, int, float)
+    try:
+        trivial_types += (unicode,)
+    except NameError:
+        pass
+
+    def is_trivial(value):
+        if isinstance(value, trivial_types):
+            return True
+
+        if isinstance(value, (list, tuple)):
+            return all(map(is_trivial, value))
+
+        return False
+
+    if is_hash_randomized() and not is_trivial(value):
         return "{0}_{1}".format(name, index + 1)
 
     try:
