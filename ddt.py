@@ -148,7 +148,10 @@ def ddt(cls):
                 elif isinstance(data, list):
                     value = elem
                     test_name = mk_test_name(name, value, i)
-                add_test(test_name, func, value)
+                if isinstance(value, dict):
+                    add_test(test_name, func, **value)
+                else:
+                    add_test(test_name, func, value)
 
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
