@@ -42,3 +42,16 @@ multiplied.
 
 DDT will try to give the new test cases meaningful names by converting the
 data values to valid python identifiers.
+
+
+.. note::
+
+   Python 2.7.3 introduced *hash randomization* which is by default
+   enabled on Python 3.3 and later. DDT's default mechanism to
+   generate meaningful test names will **not** use the test data value
+   as part of the name for complex types if hash randomization is
+   enabled.
+
+   You can disable hash randomization by setting the
+   ``PYTHONHASHSEED`` environment variable to a fixed value before
+   running tests (``export PYTHONHASHSEED=1`` for example).
