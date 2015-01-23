@@ -3,12 +3,12 @@ from ddt import ddt, data, file_data, unpack
 from test.mycode import larger_than_two, has_three_elements, is_a_greeting
 
 
-class mylist(list):
+class Mylist(list):
     pass
 
 
 def annotated(a, b):
-    r = mylist([a, b])
+    r = Mylist([a, b])
     setattr(r, "__name__", "test_%d_greater_than_%d" % (a, b))
     return r
 

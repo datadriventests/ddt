@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+# This file is a part of DDT (https://github.com/txels/ddt)
+# Copyright 2012-2015 Carles Barrobés and DDT contributors
+# For the exact contribution history, see the git revision log.
+# DDT is licensed under the MIT License, included in
+# https://github.com/txels/ddt/blob/master/LICENSE.md
+
 import inspect
 import json
 import os
@@ -129,6 +136,55 @@ def mk_test_name(name, value, index=0):
     return re.sub('\W|^(?=\d)', '_', test_name)
 
 
+def feed_data(func, new_name, *args, **kwargs):
+    """
+    This internal method decorator feeds the test data item to the test.
+
+    """
+    @wraps(func)
+    def wrapper(self):
+        return func(self, *args, **kwargs)
+    wrapper.__name__ = new_name
+    return wrapper
+
+
+def add_test(cls, test_name, func, *args, **kwargs):
+    """
+    Add a test case to this class.
+
+    The test will be based on an existing function but will give it a new
+    name.
+
+    """
+    setattr(cls, test_name, feed_data(func, test_name, *args, **kwargs))
+
+
+def process_file_data(cls, name, func, file_attr):
+    """
+    Process the parameter in the `file_data` decorator.
+
+    """
+    cls_path = os.path.abspath(inspect.getsourcefile(cls))
+    data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
+
+    def _raise_ve(*args):  # pylint: disable-msg=W0613
+        raise ValueError("%s does not exist" % file_attr)
+
+    if os.path.exists(data_file_path) is False:
+        test_name = mk_test_name(name, "error")
+        add_test(cls, test_name, _raise_ve, None)
+    else:
+        data = json.loads(open(data_file_path).read())
+        for i, elem in enumerate(data):
+            if isinstance(data, dict):
+                key, value = elem, data[elem]
+                test_name = mk_test_name(name, key, i)
+            elif isinstance(data, list):
+                value = elem
+                test_name = mk_test_name(name, value, i)
+            add_test(cls, test_name, func, value)
+
+
 def ddt(cls):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
@@ -153,67 +209,21 @@ def ddt(cls):
     from the ``data`` key.
 
     """
-    def feed_data(func, new_name, *args, **kwargs):
-        """
-        This internal method decorator feeds the test data item to the test.
-
-        """
-        @wraps(func)
-        def wrapper(self):
-            return func(self, *args, **kwargs)
-        wrapper.__name__ = new_name
-        return wrapper
-
-    def add_test(test_name, func, *args, **kwargs):
-        """
-        Add a test case to this class.
-
-        The test will be based on an existing function but will give it a new
-        name.
-
-        """
-        setattr(cls, test_name, feed_data(func, test_name, *args, **kwargs))
-
-    def process_file_data(name, func, file_attr):
-        """
-        Process the parameter in the `file_data` decorator.
-
-        """
-        cls_path = os.path.abspath(inspect.getsourcefile(cls))
-        data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
-
-        def _raise_ve(*args):
-            raise ValueError("%s does not exist" % file_attr)
-
-        if os.path.exists(data_file_path) is False:
-            test_name = mk_test_name(name, "error")
-            add_test(test_name, _raise_ve, None)
-        else:
-            data = json.loads(open(data_file_path).read())
-            for i, elem in enumerate(data):
-                if isinstance(data, dict):
-                    key, value = elem, data[elem]
-                    test_name = mk_test_name(name, key, i)
-                elif isinstance(data, list):
-                    value = elem
-                    test_name = mk_test_name(name, value, i)
-                add_test(test_name, func, value)
-
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
             for i, v in enumerate(getattr(func, DATA_ATTR)):
                 test_name = mk_test_name(name, getattr(v, "__name__", v), i)
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(test_name, func, *v)
+                        add_test(cls, test_name, func, *v)
                     else:
                         # unpack dictionary
-                        add_test(test_name, func, **v)
+                        add_test(cls, test_name, func, **v)
                 else:
-                    add_test(test_name, func, v)
+                    add_test(cls, test_name, func, v)
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
-            process_file_data(name, func, file_attr)
+            process_file_data(cls, name, func, file_attr)
             delattr(cls, name)
     return cls
