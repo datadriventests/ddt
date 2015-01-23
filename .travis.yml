@@ -5,7 +5,7 @@ python:
   #- 3.2
   - 3.3
   - 3.4
-install: pip install -r test-requirements.txt
+install: pip install -r requirements/test.txt
 script:
     - nosetests --with-cov --cover-package=ddt
     - flake8 ddt.py test
