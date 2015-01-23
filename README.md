@@ -11,3 +11,6 @@ Installation
 ```pip install ddt```
 
 More info at http://ddt.readthedocs.org/
+
+See [Contributing](CONTRIBUTING.md) if you plan to contribute to `ddt`,
+and [License](LICENSE.md) if you plan to use it.
