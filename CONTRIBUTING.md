@@ -12,8 +12,9 @@ Your PRs are more likely to be merged quickly if:
 
 ## Building
 
+PRs to `ddt` are always built by Travis-CI on Python 2 and 3.
 
-The simplest way to build `ddt` is using `tox`:
+If you want to build `ddt` locally, the simplest way is to use `tox`:
 
 ```
 pip install tox
@@ -24,9 +25,7 @@ This will run tests on various releases of python (2 and 3, as long as they
 are installed in your computer), run `flake8` and build the Sphinx
 documentation.
 
-PRs to `ddt` are always built by travis-ci using tox.
-
-Alternatively, if you ony want to run tests on your active version of python,
+Alternatively, if you only want to run tests on your active version of python,
 I recommend you make yourself a virtual environment and:
 
 ```
