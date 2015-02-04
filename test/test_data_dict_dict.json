@@ -1,0 +1,22 @@
+{
+    "positive_integer_range": {
+        "start": 0,
+        "end": 2,
+        "value": 1
+    },
+    "negative_integer_range": {
+        "start": -2,
+        "end": 0,
+        "value": -1
+    },
+    "positive_real_range": {
+        "start": 0.0,
+        "end": 1.0,
+        "value": 0.5
+    },
+    "negative_real_range": {
+        "start": -1.0,
+        "end": 0.0,
+        "value": -0.5
+    }
+}

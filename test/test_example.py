@@ -31,6 +31,12 @@ class FooTestCase(unittest.TestCase):
         a, b = value
         self.assertGreater(a, b)
 
+    @file_data("test_data_dict_dict.json")
+    def test_file_data_dict_dict(self, start, end, value):
+        self.assertLess(start, end)
+        self.assertLess(value, end)
+        self.assertGreater(value, start)
+
     @file_data('test_data_dict.json')
     def test_file_data_dict(self, value):
         self.assertTrue(has_three_elements(value))
