@@ -182,7 +182,10 @@ def process_file_data(cls, name, func, file_attr):
             elif isinstance(data, list):
                 value = elem
                 test_name = mk_test_name(name, value, i)
-            add_test(cls, test_name, func, value)
+            if isinstance(value, dict):
+                add_test(cls, test_name, func, **value)
+            else:
+                add_test(cls, test_name, func, value)
 
 
 def ddt(cls):
