@@ -3,7 +3,7 @@ import json
 
 import six
 
-from ddt import ddt, data, file_data
+from ddt import ddt, data, file_data, is_hash_randomized
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
 
@@ -187,21 +187,21 @@ def test_ddt_data_name_attribute():
     def hello():
         pass
 
-    class myint(int):
+    class Myint(int):
         pass
 
-    class mytest(object):
+    class Mytest(object):
         pass
 
-    d1 = myint(1)
+    d1 = Myint(1)
     d1.__name__ = 'data1'
 
-    d2 = myint(2)
+    d2 = Myint(2)
 
     data_hello = data(d1, d2)(hello)
-    setattr(mytest, 'test_hello', data_hello)
+    setattr(Mytest, 'test_hello', data_hello)
 
-    ddt_mytest = ddt(mytest)
+    ddt_mytest = ddt(Mytest)
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_1_data1'))
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_2_2'))
 
@@ -219,26 +219,33 @@ def test_ddt_data_unicode():
     if six.PY2:
 
         @ddt
-        class mytest(object):
+        class Mytest(object):
             @data(u'ascii', u'non-ascii-\N{SNOWMAN}', {u'\N{SNOWMAN}': 'data'})
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr(mytest, 'test_hello_2_non_ascii__u2603'))
-        assert_is_not_none(getattr(mytest, 'test_hello_3__u__u2603____data__'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__u2603'))
+        if is_hash_randomized():
+            assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+        else:
+            assert_is_not_none(getattr(Mytest,
+                                       'test_hello_3__u__u2603____data__'))
 
     elif six.PY3:
 
         @ddt
-        class mytest(object):
+        class Mytest(object):
             @data('ascii', 'non-ascii-\N{SNOWMAN}', {'\N{SNOWMAN}': 'data'})
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr(mytest, 'test_hello_2_non_ascii__'))
-        assert_is_not_none(getattr(mytest, 'test_hello_3________data__'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__'))
+        if is_hash_randomized():
+            assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+        else:
+            assert_is_not_none(getattr(Mytest, 'test_hello_3________data__'))
 
 
 def test_feed_data_with_invalid_identifier():

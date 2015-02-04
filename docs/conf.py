@@ -48,6 +48,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'DDT'
+# pylint: disable-msg=W0622
+# - copyright is a builtin
 copyright = u'2012, Carles Barrobés'
 
 # The version info for the project you're documenting, acts as replacement for
