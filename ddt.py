@@ -72,21 +72,21 @@ def file_data(value):
 
 class DataValues(namedtuple("DataValues", ["values"])):
 
-    def add_tests(self, cls, name, func):
+    def generate_tests(self, cls, name, func):
         for i, v in enumerate(self.values):
             test_name = mk_test_name(name, getattr(v, "__name__", v), i)
             if hasattr(func, UNPACK_ATTR):
                 if isinstance(v, tuple) or isinstance(v, list):
-                    add_test(cls, test_name, func, *v)
+                    yield (test_name, func, v, {})
                 else:
                     # unpack dictionary
-                    add_test(cls, test_name, func, **v)
+                    yield (test_name, func, [], v)
             else:
-                add_test(cls, test_name, func, v)
+                yield (test_name, func, [v], {})
 
 
 class FileValues(namedtuple("FileValues", ["file_path"])):
-    def add_tests(self, cls, name, func):
+    def generate_tests(self, cls, name, func):
         cls_path = os.path.abspath(inspect.getsourcefile(cls))
         data_file_path = os.path.join(
             os.path.dirname(cls_path),
@@ -98,7 +98,7 @@ class FileValues(namedtuple("FileValues", ["file_path"])):
 
         if os.path.exists(data_file_path) is False:
             test_name = mk_test_name(name, "error")
-            add_test(cls, test_name, _raise_ve, None)
+            yield (test_name, _raise_ve, [None], {})
         else:
             data = json.loads(open(data_file_path).read())
             for i, elem in enumerate(data):
@@ -108,7 +108,7 @@ class FileValues(namedtuple("FileValues", ["file_path"])):
                 elif isinstance(data, list):
                     value = elem
                     test_name = mk_test_name(name, value, i)
-                add_test(cls, test_name, func, value)
+                yield (test_name, func, [value], {})
 
 
 def is_hash_randomized():
@@ -226,6 +226,12 @@ def ddt(cls):
     """
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
-            getattr(func, DATA_ATTR).add_tests(cls, name, func)
+            test_specs = getattr(func, DATA_ATTR).generate_tests(
+                cls,
+                name,
+                func
+            )
+            for (test_name, test_func, args, kwargs) in test_specs:
+                add_test(cls, test_name, test_func, *args, **kwargs)
             delattr(cls, name)
     return cls
