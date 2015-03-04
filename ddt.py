@@ -71,8 +71,46 @@ def file_data(value):
     return wrapper
 
 
-DataValues = namedtuple("DataValues", ["values"])
-FileValues = namedtuple("FileValues", ["file_path"])
+class DataValues(namedtuple("DataValues", ["values"])):
+
+    def add_tests(self, cls, name, func):
+        for i, v in enumerate(self.values):
+            test_name = mk_test_name(name, getattr(v, "__name__", v), i)
+            if hasattr(func, UNPACK_ATTR):
+                if isinstance(v, tuple) or isinstance(v, list):
+                    add_test(cls, test_name, func, *v)
+                else:
+                    # unpack dictionary
+                    add_test(cls, test_name, func, **v)
+            else:
+                add_test(cls, test_name, func, v)
+
+
+class FileValues(namedtuple("FileValues", ["file_path"])):
+    def add_tests(self, cls, name, func):
+        cls_path = os.path.abspath(inspect.getsourcefile(cls))
+        data_file_path = os.path.join(
+            os.path.dirname(cls_path),
+            self.file_path
+        )
+
+        def _raise_ve(*args):  # pylint: disable-msg=W0613
+            raise ValueError("%s does not exist" % self.file_path)
+
+        if os.path.exists(data_file_path) is False:
+            test_name = mk_test_name(name, "error")
+            add_test(cls, test_name, _raise_ve, None)
+        else:
+            data = json.loads(open(data_file_path).read())
+            for i, elem in enumerate(data):
+                if isinstance(data, dict):
+                    key, value = elem, data[elem]
+                    test_name = mk_test_name(name, key, i)
+                elif isinstance(data, list):
+                    value = elem
+                    test_name = mk_test_name(name, value, i)
+                add_test(cls, test_name, func, value)
+
 
 def is_hash_randomized():
     return (((sys.hexversion >= 0x02070300 and
@@ -163,32 +201,6 @@ def add_test(cls, test_name, func, *args, **kwargs):
     setattr(cls, test_name, feed_data(func, test_name, *args, **kwargs))
 
 
-def process_file_data(cls, name, func, file_attr):
-    """
-    Process the parameter in the `file_data` decorator.
-
-    """
-    cls_path = os.path.abspath(inspect.getsourcefile(cls))
-    data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
-
-    def _raise_ve(*args):  # pylint: disable-msg=W0613
-        raise ValueError("%s does not exist" % file_attr)
-
-    if os.path.exists(data_file_path) is False:
-        test_name = mk_test_name(name, "error")
-        add_test(cls, test_name, _raise_ve, None)
-    else:
-        data = json.loads(open(data_file_path).read())
-        for i, elem in enumerate(data):
-            if isinstance(data, dict):
-                key, value = elem, data[elem]
-                test_name = mk_test_name(name, key, i)
-            elif isinstance(data, list):
-                value = elem
-                test_name = mk_test_name(name, value, i)
-            add_test(cls, test_name, func, value)
-
-
 def ddt(cls):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
@@ -215,19 +227,9 @@ def ddt(cls):
     """
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
-            for i, v in enumerate(getattr(func, DATA_ATTR).values):
-                test_name = mk_test_name(name, getattr(v, "__name__", v), i)
-                if hasattr(func, UNPACK_ATTR):
-                    if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(cls, test_name, func, *v)
-                    else:
-                        # unpack dictionary
-                        add_test(cls, test_name, func, **v)
-                else:
-                    add_test(cls, test_name, func, v)
+            getattr(func, DATA_ATTR).add_tests(cls, name, func)
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
-            file_attr = getattr(func, FILE_ATTR)
-            process_file_data(cls, name, func, file_attr.file_path)
+            getattr(func, FILE_ATTR).add_tests(cls, name, func)
             delattr(cls, name)
     return cls
