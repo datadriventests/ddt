@@ -71,21 +71,20 @@ def file_data(value):
 
 
 class DataValues(namedtuple("DataValues", ["values"])):
-    def test_values(self, cls, name, func):
-        for i, v in enumerate(self.values):
-            test_name = mk_test_name(name, getattr(v, "__name__", v), i)
+    def test_values(self, cls, func):
+        for v in self.values:
             if hasattr(func, UNPACK_ATTR):
                 if isinstance(v, tuple) or isinstance(v, list):
-                    yield TestValue(test_name, func, *v)
+                    yield TestValue(func, *v)
                 else:
                     # unpack dictionary
-                    yield TestValue(test_name, func, **v)
+                    yield TestValue(func, **v)
             else:
-                yield TestValue(test_name, func, v)
+                yield TestValue(func, v)
 
 
 class FileValues(namedtuple("FileValues", ["file_path"])):
-    def test_values(self, cls, name, func):
+    def test_values(self, cls, func):
         cls_path = os.path.abspath(inspect.getsourcefile(cls))
         data_file_path = os.path.join(
             os.path.dirname(cls_path),
@@ -93,21 +92,15 @@ class FileValues(namedtuple("FileValues", ["file_path"])):
         )
 
         if os.path.exists(data_file_path) is False:
-            test_name = mk_test_name(name, "error")
-            yield TestError(
-                test_name,
-                ValueError("%s does not exist" % self.file_path)
-            )
+            yield TestError(ValueError("%s does not exist" % self.file_path))
         else:
             data = json.loads(open(data_file_path).read())
-            for i, elem in enumerate(data):
-                if isinstance(data, dict):
-                    key, value = elem, data[elem]
-                    test_name = mk_test_name(name, key, i)
-                elif isinstance(data, list):
-                    value = elem
-                    test_name = mk_test_name(name, value, i)
-                yield TestValue(test_name, func, value)
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    yield TestValue(func, value, _test_value_name=key)
+            elif isinstance(data, list):
+                for value in data:
+                    yield TestValue(func, value)
 
 
 def is_hash_randomized():
@@ -189,13 +182,23 @@ def feed_data(func, new_name, *args, **kwargs):
 
 
 class TestValue(object):
-    def __init__(self, test_name, func, *args, **kwargs):
-        self.test_name = test_name
+    def __init__(self, func, *args, **kwargs):
+        if '_test_value_name' in kwargs:
+            self.value_name = kwargs.pop('_test_value_name')
+        elif len(args) == 1 and not kwargs:
+            self.value_name = getattr(args[0], '__name__', args[0])
+        elif args:
+            self.value_name = args
+        elif kwargs:
+            self.value_name = kwargs
+        else:
+            raise Exception("unable to generate value names")
+
         self.func = func
         self.args = args
         self.kwargs = kwargs
 
-    def add_test(self, cls):
+    def add_test(self, cls, name, index):
         """
         Add a test case to this class.
 
@@ -203,17 +206,18 @@ class TestValue(object):
         name.
 
         """
-        setattr(
-            cls,
-            self.test_name,
-            feed_data(self.func, self.test_name, *self.args, **self.kwargs)
-        )
+        test_name = mk_test_name(name, self.value_name, index)
+        test_data = feed_data(self.func, test_name, *self.args, **self.kwargs)
+        setattr(cls, test_name, test_data)
 
 
 class TestError(TestValue):
-    def __init__(self, test_name, exception):
+    def __init__(self, exception):
         self.exception = exception
-        super(TestError, self).__init__(test_name, self._raise_exception)
+        super(TestError, self).__init__(
+            self._raise_exception,
+            _test_value_name="error"
+        )
 
     def _raise_exception(self, test_cls):
         raise self.exception
@@ -245,8 +249,8 @@ def ddt(cls):
     """
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
-            test_values = getattr(func, DATA_ATTR).test_values(cls, name, func)
-            for test_value in test_values:
-                test_value.add_test(cls)
+            values = getattr(func, DATA_ATTR).test_values(cls, func)
+            for idx, test_value in enumerate(values):
+                test_value.add_test(cls, name, idx)
             delattr(cls, name)
     return cls
