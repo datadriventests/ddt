@@ -11,6 +11,7 @@ import os
 import re
 import sys
 from functools import wraps
+from collections import namedtuple
 
 __version__ = '1.0.0'
 
@@ -40,7 +41,7 @@ def data(*values):
 
     """
     def wrapper(func):
-        setattr(func, DATA_ATTR, values)
+        setattr(func, DATA_ATTR, DataValues(values))
         return func
     return wrapper
 
@@ -65,10 +66,13 @@ def file_data(value):
 
     """
     def wrapper(func):
-        setattr(func, FILE_ATTR, value)
+        setattr(func, FILE_ATTR, FileValues(value))
         return func
     return wrapper
 
+
+DataValues = namedtuple("DataValues", ["values"])
+FileValues = namedtuple("FileValues", ["file_path"])
 
 def is_hash_randomized():
     return (((sys.hexversion >= 0x02070300 and
@@ -211,7 +215,7 @@ def ddt(cls):
     """
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
-            for i, v in enumerate(getattr(func, DATA_ATTR)):
+            for i, v in enumerate(getattr(func, DATA_ATTR).values):
                 test_name = mk_test_name(name, getattr(v, "__name__", v), i)
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
@@ -224,6 +228,6 @@ def ddt(cls):
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
-            process_file_data(cls, name, func, file_attr)
+            process_file_data(cls, name, func, file_attr.file_path)
             delattr(cls, name)
     return cls

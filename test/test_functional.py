@@ -3,7 +3,9 @@ import json
 
 import six
 
-from ddt import ddt, data, file_data, is_hash_randomized
+from ddt import (
+    ddt, data, file_data, is_hash_randomized, DataValues
+)
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
 
@@ -71,7 +73,7 @@ def test_data_decorator():
     extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), (1, 2))
+    assert_equal(getattr(data_hello, extra_attr), DataValues((1, 2)))
 
 
 def test_file_data_decorator_with_dict():
@@ -93,7 +95,10 @@ def test_file_data_decorator_with_dict():
     extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), ("test_data_dict.json",))
+    assert_equal(
+        getattr(data_hello, extra_attr),
+        DataValues(("test_data_dict.json",))
+    )
 
 
 is_test = lambda x: x.startswith('test_')
