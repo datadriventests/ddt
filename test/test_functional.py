@@ -4,7 +4,7 @@ import json
 import six
 
 from ddt import (
-    ddt, data, file_data, is_hash_randomized, DataValues
+    ddt, data, file_data, is_hash_randomized, DataValues, FileValues
 )
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
@@ -73,7 +73,31 @@ def test_data_decorator():
     extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), DataValues((1, 2)))
+    assert_equal(getattr(data_hello, extra_attr), [DataValues((1, 2))])
+
+
+def test_multiple_data_decorators():
+    """
+    Test the ``data`` method decorator with multiple applications
+    """
+
+    def hello():
+        pass
+
+    pre_size = len(hello.__dict__)
+    keys = set(hello.__dict__.keys())
+    data_hello = data(1, 2)(data(3)(hello))
+    dh_keys = set(data_hello.__dict__.keys())
+    post_size = len(data_hello.__dict__)
+
+    assert_equal(post_size, pre_size + 1)
+    extra_attrs = dh_keys - keys
+    assert_equal(len(extra_attrs), 1)
+    extra_attr = extra_attrs.pop()
+    assert_equal(
+        getattr(data_hello, extra_attr),
+        [DataValues((1, 2)), DataValues((3,))]
+    )
 
 
 def test_file_data_decorator_with_dict():
@@ -86,7 +110,7 @@ def test_file_data_decorator_with_dict():
 
     pre_size = len(hello.__dict__)
     keys = set(hello.__dict__.keys())
-    data_hello = data("test_data_dict.json")(hello)
+    data_hello = file_data("test_data_dict.json")(hello)
 
     dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
@@ -97,7 +121,36 @@ def test_file_data_decorator_with_dict():
     extra_attr = extra_attrs.pop()
     assert_equal(
         getattr(data_hello, extra_attr),
-        DataValues(("test_data_dict.json",))
+        [FileValues("test_data_dict.json")]
+    )
+
+
+def test_multiple_file_data_decorators_with_dict():
+    """
+    Test the ``file_data`` method decorator with multiple applications
+    """
+
+    def hello():
+        pass
+
+    pre_size = len(hello.__dict__)
+    keys = set(hello.__dict__.keys())
+    data_hello = file_data("test_other_data.json")(hello)
+    data_hello = file_data("test_data_dict.json")(data_hello)
+
+    dh_keys = set(data_hello.__dict__.keys())
+    post_size = len(data_hello.__dict__)
+
+    assert_equal(post_size, pre_size + 1)
+    extra_attrs = dh_keys - keys
+    assert_equal(len(extra_attrs), 1)
+    extra_attr = extra_attrs.pop()
+    assert_equal(
+        getattr(data_hello, extra_attr),
+        [
+            FileValues("test_data_dict.json"),
+            FileValues("test_other_data.json"),
+        ]
     )
 
 

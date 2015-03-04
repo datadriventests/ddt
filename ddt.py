@@ -6,6 +6,7 @@
 # https://github.com/txels/ddt/blob/master/LICENSE.md
 
 import inspect
+import itertools
 import json
 import os
 import re
@@ -26,7 +27,6 @@ UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
 def unpack(func):
     """
     Method decorator to add unpack feature.
-
     """
     setattr(func, UNPACK_ATTR, True)
     return func
@@ -34,20 +34,48 @@ def unpack(func):
 
 def data(*values):
     """
-    Method decorator to add to your test methods.
+    Method decorator to add data to your test methods.
 
     Should be added to methods of instances of ``unittest.TestCase``.
 
+    All arguments to this function will be passed as arguments to the
+    decorated test method, and each argument passed will generate a new test
+    method.
+
+    The ``@data`` and ``@file_data`` decorators can be nested. When nested,
+    the arguments passed to ``data`` and stored in the files named in
+    ``file_data`` will be combined in a Cartesian product before being passed
+    to the decorated method. For example:
+
+    .. code-block:: python
+
+        @data(1, 2)
+        @data(3, 4)
+        def test_foo(self, fst, snd):
+            pass
+
+    would result in four test calls:
+
+    .. code-block:: python
+
+        test_foo(1, 3)
+        test_foo(2, 3)
+        test_foo(1, 4)
+        test_foo(2, 4)
     """
     def wrapper(func):
-        setattr(func, DATA_ATTR, DataValues(values))
+        if not hasattr(func, DATA_ATTR):
+            setattr(func, DATA_ATTR, [])
+        # Prepend the new set of values, so that the the stack of @data
+        # decorators inserts arguments from top to bottom
+        getattr(func, DATA_ATTR).insert(0, DataValues(values))
         return func
     return wrapper
 
 
 def file_data(value):
     """
-    Method decorator to add to your test methods.
+    Method decorator to add data from a file to your test methods.
 
     Should be added to methods of instances of ``unittest.TestCase``.
 
@@ -65,7 +93,11 @@ def file_data(value):
 
     """
     def wrapper(func):
-        setattr(func, DATA_ATTR, FileValues(value))
+        if not hasattr(func, DATA_ATTR):
+            setattr(func, DATA_ATTR, [])
+        # Prepend the new set of values, so that the the stack of @data
+        # decorators inserts arguments from top to bottom
+        getattr(func, DATA_ATTR).insert(0, FileValues(value))
         return func
     return wrapper
 
@@ -223,6 +255,37 @@ class TestError(TestValue):
         raise self.exception
 
 
+def combine(test_values):
+    if len(test_values) == 1:
+        return test_values[0]
+
+    func = None
+    args = []
+    kwargs = {}
+    names = []
+    for test_value in test_values:
+        if isinstance(test_value, TestError):
+            return test_value
+
+        if func is None:
+            func = test_value.func
+        elif test_value.func != func:
+            return TestError(
+                ValueError(
+                    "{} is not the same function as {}".format(
+                        test_value.func,
+                        func
+                    )
+                )
+            )
+
+        args.extend(test_value.args)
+        kwargs.update(test_value.kwargs)
+        names.append(test_value.value_name)
+
+    return TestValue(func, _test_value_name=names, *args, **kwargs)
+
+
 def ddt(cls):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
@@ -249,8 +312,11 @@ def ddt(cls):
     """
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
-            values = getattr(func, DATA_ATTR).test_values(cls, func)
-            for idx, test_value in enumerate(values):
-                test_value.add_test(cls, name, idx)
+            value_combinations = itertools.product(*(
+                value_set.test_values(cls, func)
+                for value_set in getattr(func, DATA_ATTR)
+            ))
+            for idx, values in enumerate(value_combinations):
+                combine(values).add_test(cls, name, idx)
             delattr(cls, name)
     return cls
