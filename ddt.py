@@ -71,34 +71,33 @@ def file_data(value):
 
 
 class DataValues(namedtuple("DataValues", ["values"])):
-
-    def generate_tests(self, cls, name, func):
+    def test_values(self, cls, name, func):
         for i, v in enumerate(self.values):
             test_name = mk_test_name(name, getattr(v, "__name__", v), i)
             if hasattr(func, UNPACK_ATTR):
                 if isinstance(v, tuple) or isinstance(v, list):
-                    yield (test_name, func, v, {})
+                    yield TestValue(test_name, func, *v)
                 else:
                     # unpack dictionary
-                    yield (test_name, func, [], v)
+                    yield TestValue(test_name, func, **v)
             else:
-                yield (test_name, func, [v], {})
+                yield TestValue(test_name, func, v)
 
 
 class FileValues(namedtuple("FileValues", ["file_path"])):
-    def generate_tests(self, cls, name, func):
+    def test_values(self, cls, name, func):
         cls_path = os.path.abspath(inspect.getsourcefile(cls))
         data_file_path = os.path.join(
             os.path.dirname(cls_path),
             self.file_path
         )
 
-        def _raise_ve(*args):  # pylint: disable-msg=W0613
-            raise ValueError("%s does not exist" % self.file_path)
-
         if os.path.exists(data_file_path) is False:
             test_name = mk_test_name(name, "error")
-            yield (test_name, _raise_ve, [None], {})
+            yield TestError(
+                test_name,
+                ValueError("%s does not exist" % self.file_path)
+            )
         else:
             data = json.loads(open(data_file_path).read())
             for i, elem in enumerate(data):
@@ -108,7 +107,7 @@ class FileValues(namedtuple("FileValues", ["file_path"])):
                 elif isinstance(data, list):
                     value = elem
                     test_name = mk_test_name(name, value, i)
-                yield (test_name, func, [value], {})
+                yield TestValue(test_name, func, value)
 
 
 def is_hash_randomized():
@@ -189,15 +188,35 @@ def feed_data(func, new_name, *args, **kwargs):
     return wrapper
 
 
-def add_test(cls, test_name, func, *args, **kwargs):
-    """
-    Add a test case to this class.
+class TestValue(object):
+    def __init__(self, test_name, func, *args, **kwargs):
+        self.test_name = test_name
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
 
-    The test will be based on an existing function but will give it a new
-    name.
+    def add_test(self, cls):
+        """
+        Add a test case to this class.
 
-    """
-    setattr(cls, test_name, feed_data(func, test_name, *args, **kwargs))
+        The test will be based on an existing function but will give it a new
+        name.
+
+        """
+        setattr(
+            cls,
+            self.test_name,
+            feed_data(self.func, self.test_name, *self.args, **self.kwargs)
+        )
+
+
+class TestError(TestValue):
+    def __init__(self, test_name, exception):
+        self.exception = exception
+        super(TestError, self).__init__(test_name, self._raise_exception)
+
+    def _raise_exception(self, test_cls):
+        raise self.exception
 
 
 def ddt(cls):
@@ -226,12 +245,8 @@ def ddt(cls):
     """
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
-            test_specs = getattr(func, DATA_ATTR).generate_tests(
-                cls,
-                name,
-                func
-            )
-            for (test_name, test_func, args, kwargs) in test_specs:
-                add_test(cls, test_name, test_func, *args, **kwargs)
+            test_values = getattr(func, DATA_ATTR).test_values(cls, name, func)
+            for test_value in test_values:
+                test_value.add_test(cls)
             delattr(cls, name)
     return cls
