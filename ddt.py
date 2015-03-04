@@ -20,7 +20,6 @@ __version__ = '1.0.0'
 # by the `ddt` class decorator.
 
 DATA_ATTR = '%values'      # store the data the test must run with
-FILE_ATTR = '%file_path'   # store the path to JSON file
 UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
 
 
@@ -66,7 +65,7 @@ def file_data(value):
 
     """
     def wrapper(func):
-        setattr(func, FILE_ATTR, FileValues(value))
+        setattr(func, DATA_ATTR, FileValues(value))
         return func
     return wrapper
 
@@ -228,8 +227,5 @@ def ddt(cls):
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, DATA_ATTR):
             getattr(func, DATA_ATTR).add_tests(cls, name, func)
-            delattr(cls, name)
-        elif hasattr(func, FILE_ATTR):
-            getattr(func, FILE_ATTR).add_tests(cls, name, func)
             delattr(cls, name)
     return cls
