@@ -9,3 +9,4 @@ install: pip install -r requirements/test.txt
 script:
     - nosetests --with-cov --cover-package=ddt
     - flake8 ddt.py test
+    - codecov
