@@ -55,6 +55,28 @@ class FooTestCase(unittest.TestCase):
     def test_dicts_extracted_into_kwargs(self, first, second, third):
         self.assertTrue(first < third < second)
 
+    @data(1, 2, 3)
+    @data(4, 5, 6)
+    @data(7, 8, 9)
+    def test_products(self, first_value, second_value, third_value):
+        self.assertTrue(first_value < second_value < third_value)
+
+    @unpack
+    @data({'first': 1}, {'first': 2}, {'first': 3})
+    @data(
+        {'second': 4, 'third': 5},
+        {'second': 5, 'third': 6},
+        {'second': 6, 'third': 7}
+    )
+    def test_dict_products(self, first, second, third):
+        self.assertTrue(first < second < third)
+
+    @unpack
+    @data([1], [2], [3])
+    @data((4, 5), (5, 6), (6, 7))
+    def test_list_products(self, first, second, third):
+        self.assertTrue(first < second < third)
+
     @data(u'ascii', u'non-ascii-\N{SNOWMAN}')
     def test_unicode(self, value):
         self.assertIn(value, (u'ascii', u'non-ascii-\N{SNOWMAN}'))
