@@ -534,10 +534,9 @@ def combine_names(name1, name2):
     used as the identity.
 
     """
-    if name2 is None:
+    if name1 is None:
+        return name2
+    elif name2 is None:
         return name1
     else:
-        if name1 is None:
-            return name2
-        else:
-            return"{0}__{1}".format(name1, name2)
+        return"{0}__{1}".format(name1, name2)
