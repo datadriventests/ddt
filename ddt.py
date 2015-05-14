@@ -142,12 +142,9 @@ def ddt(cls):
     """
     for name, func in list(cls.__dict__.items()):
         if hasattr(func, PARAMS_SETS_ATTR):
-            test_vectors = itertools.product(*(
-                map(
-                    lambda s: s.use_class(cls),
-                    getattr(func, PARAMS_SETS_ATTR)
-                )
-            ))
+            test_vectors = itertools.product(
+                *[s.use_class(cls) for s in getattr(func, PARAMS_SETS_ATTR)]
+            )
             for vector in test_vectors:
                 params = sum(vector, Params(name, [], {}))
                 params.unpack(getattr(func, UNPACKALL_ATTR, 0))
@@ -453,7 +450,7 @@ def is_trivial(value):
         return True
 
     if isinstance(value, (list, tuple)):
-        return all(map(is_trivial, value))
+        return all([is_trivial(v) for v in value])
 
     return False
 
