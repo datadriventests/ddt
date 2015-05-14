@@ -1,21 +1,20 @@
 Welcome to DDT's documentation!
 ===============================
 
-DDT (Data-Driven Tests) allows you to multiply one test case
-by running it with different test data, and make it appear as
-multiple test cases.
+DDT (Data-Driven Tests) allows you to multiply one test by running it with
+different test data, and make it appear as multiple tests.
 
 You can find (and fork) the project in https://github.com/txels/ddt.
 
 DDT should work on Python2 and Python3, but we only officially test it for
-versions 2.7 and 3.3.
+versions 2.7, 3.3, and 3.4.
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   example
+   tutorial
    api
 
 Indices and tables
