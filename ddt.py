@@ -221,6 +221,122 @@ def ddt(cls):
     return cls
 
 
+# Internal data structures
+
+
+class ParamsFailure:
+    """
+    FileParamsSet generates an instance of this class instead of instances of
+    Params in case it cannot load the data file. A fake test method is
+    generated instead of a regular one if it has an instance of this class
+    among its parameters.
+
+    ParamsFailure supports the same interface as Params.
+
+    More formally, instances of Params and ParamsFailure form a semigroup with
+    respect to addition (+) with ``Params(None, [], {}`` being a left identity.
+    The ``unpack()`` method is a homomorphism.
+
+    Instances of ParamsFailure act almost as absorbing elements (0.X=0, X.0=0).
+    The left-most instance of ParamsFailure in a sum prevails, only the name
+    keeps updating.
+
+    """
+
+    def __init__(self, name, reason):
+        self.name = name
+        self.reason = reason
+
+    def unpack(self, N=1):
+        """
+        Do nothing but return self (convenient for use in mappings).
+
+        """
+        return self
+
+    def __add__(self, other):
+        """
+        Return a sum of self and an instance of Param or ParamFailure.
+
+        The sum is a new instance of ParamFailure with the `reason` from the
+        left operand and a name combining names of both operands.
+
+        """
+        new_name = combine_names(self.name, other.name)
+        return ParamsFailure(new_name, self.reason)
+
+
+class Params:
+    """
+    Instances of Params form a semigroup with respect to addition.
+    ``Params(None, [], {})`` constitutes the identity. The ``unpack()``
+    function is a homomorphism.
+
+    """
+
+    def __init__(self, name, args, kwargs):
+        self.name = name
+        self.args = args
+        self.kwargs = kwargs
+
+    def unpack(self, N=1):
+        """
+        Recursively unpack positional arguments `N`-times.
+
+        """
+        while N > 0:
+            self.unpack_one_level()
+            N = N - 1
+        return self
+
+    def unpack_one_level(self):
+        """
+        Unpack one level of positional arguments.
+
+        Members of lists and tuples replace its parents as new positional
+        arguments. Members of dicts are used to update keyword arguments. Other
+        positional arguments are left intact.
+
+        """
+        new_args = []
+
+        for value in self.args:
+            if isinstance(value, list) or isinstance(value, tuple):
+                new_args.extend(value)
+            elif isinstance(value, dict):
+                self.kwargs.update(value)
+            else:
+                new_args.append(value)
+
+        self.args = new_args
+
+    def __add__(self, other):
+        """
+        Return a sum of self and an instance of Param or ParamFailure.
+
+        If combined with Params, positional arguments in the right operand are
+        concatenated to positional arguments in the left operand and keywrd
+        arguments in the right operand are used to update keyword arguments in
+        the left operand.
+
+        Note: Addition modifies the left-most instance of Params in a sum. This
+        is OK for the expected use where a fresh identity Params(None, [], {})
+        is supplied as the leftmost operand.
+
+        If combined with ParamsFailure, a new instance of ParamsFailure is
+        returned.
+        """
+        new_name = combine_names(self.name, other.name)
+
+        if isinstance(other, ParamsFailure):
+            return ParamsFailure(new_name, other.reason)
+
+        self.name = new_name
+        self.args.extend(other.args)
+        self.kwargs.update(other.kwargs)
+        return self
+
+
 # Test name generation
 
 
