@@ -168,7 +168,7 @@ def add_test(cls, func, params):
             return func(self, *params.args, **params.kwargs)
 
     else:
-        def test_case_func(self):
+        def test_case_func(self):  # pylint: disable=unused-argument
             raise params.reason
 
     test_case_func.__name__ = params.name
@@ -201,7 +201,7 @@ class ParamsFailure(object):
         self.name = name
         self.reason = reason
 
-    def unpack(self, N=1):
+    def unpack(self, N=1):  # pylint: disable=unused-argument
         """
         Do nothing but return self (convenient for use in mappings).
 
@@ -233,14 +233,14 @@ class Params(object):
         self.args = args
         self.kwargs = kwargs
 
-    def unpack(self, N=1):
+    def unpack(self, count=1):
         """
-        Recursively unpack positional arguments `N`-times.
+        Recursively unpack positional arguments `count`-times.
 
         """
-        while N > 0:
+        while count > 0:
             self.unpack_one_level()
-            N = N - 1
+            count = count - 1
         return self
 
     def unpack_one_level(self):
@@ -319,7 +319,7 @@ class InlineDataValues(object):
         """
         self.unpack_count = self.unpack_count + 1
 
-    def use_class(self, cls):
+    def use_class(self, cls):  # pylint: disable=unused-argument
         """
         Does nothing and returns self.
 
@@ -391,13 +391,13 @@ class FileDataValues(object):
         """
         self.unpack_count = self.unpack_count + 1
 
-    def load_data(self):
+    def load_values(self):  # pylint: disable=unused-argument
         try:
             filepath = os.path.join(self.pathbase, self.filepath)
-            with io.open(filepath, encoding=self.encoding) as file:
-                data = json.load(file)
+            with io.open(filepath, encoding=self.encoding) as f:
+                values = json.load(f)
 
-            return data
+            return values
 
         except IOError as reason:
             # IOError is an alias for OSError since Python 3.3
@@ -407,19 +407,19 @@ class FileDataValues(object):
             return ParamsFailure(reason.__class__.__name__, reason)
 
     def __iter__(self):
-        data = self.load_data()
+        values = self.load_values()
 
-        if isinstance(data, ParamsFailure):
-            yield data
+        if isinstance(values, ParamsFailure):
+            yield values
 
-        elif isinstance(data, list):
-            for idx, value in enumerate(data):
+        elif isinstance(values, list):
+            for idx, value in enumerate(values):
                 name = make_params_name(idx, None, value)
                 yield Params(name, [value], {}).unpack(self.unpack_count)
 
-        elif isinstance(data, dict):
-            for idx, key in enumerate(sorted(data)):
-                value = data[key]
+        elif isinstance(values, dict):
+            for idx, key in enumerate(sorted(values)):
+                value = values[key]
                 name = make_params_name(idx, key, value)
                 yield Params(name, [value], {}).unpack(self.unpack_count)
 
@@ -497,7 +497,7 @@ def convert_to_name(value):
         # fallback for python2
         value = value.encode('ascii', 'backslashreplace')
 
-    value = re.sub('\W', '_', value)
+    value = re.sub('\\W', '_', value)
     return re.sub('_+', '_', value).strip('_')
 
 
