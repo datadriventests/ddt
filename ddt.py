@@ -402,12 +402,8 @@ class FileDataValues(object):
 
             return data
 
-        except OSError as reason:
-            # Python 3
-            return ParamsFailure(reason.__class__.__name__, reason)
-
         except IOError as reason:
-            # Python 2
+            # IOError is an alias for OSError since Python 3.3
             return ParamsFailure(reason.__class__.__name__, reason)
 
         except ValueError as reason:

@@ -457,10 +457,10 @@ class TestDecorators(TestCase):
                 tc.test__IOError__1_b()
 
         if six.PY3:
-            with self.assertRaises(FileNotFoundError):
+            with self.assertRaises(IOError):
                 tc.test__FileNotFoundError__0_a()
 
-            with self.assertRaises(FileNotFoundError):
+            with self.assertRaises(IOError):
                 tc.test__FileNotFoundError__1_b()
 
     def test__tests_with_file_data_raise_exceptions_on_invalid_json(self):

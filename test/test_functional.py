@@ -172,18 +172,14 @@ def test_feed_data_file_data():
 
 def test_feed_data_file_data_missing_json():
     """
-    Test that a ValueError is raised
+    Test that an IOError is raised
     """
     tests = filter(is_test, FileDataMissingDummy.__dict__)
 
     obj = FileDataMissingDummy()
     for test in tests:
         method = getattr(obj, test)
-        if six.PY2:
-            assert_raises(IOError, method)
-
-        if six.PY3:
-            assert_raises(FileNotFoundError, method)
+        assert_raises(IOError, method)
 
 
 def test_ddt_data_name_attribute():

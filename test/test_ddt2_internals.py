@@ -253,13 +253,13 @@ class TestParamsSet(TestCase):
 
         self.assertEqual(len(params), 1)
         self.assertIsInstance(params[0], ddt.ParamsFailure)
+        self.assertIsInstance(params[0].reason, IOError)
+        self.assertIn("No such file or directory", str(params[0].reason))
+
         if six.PY2:
             self.assertEqual(params[0].name, 'IOError')
-            self.assertIsInstance(params[0].reason, IOError)
-        if six.PY3:
+        elif six.PY3:
             self.assertEqual(params[0].name, 'FileNotFoundError')
-            self.assertIsInstance(params[0].reason, FileNotFoundError)
-        self.assertIn("No such file or directory", str(params[0].reason))
 
     def test__FileDataValues_generates_ParamsFailure_on_invalid_JSON(self):
         ps = ddt.FileDataValues('test_data_invalid.json')
