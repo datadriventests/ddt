@@ -65,7 +65,7 @@ def data(*unnamed_values, **named_values):
     def wrapper(func):
         if not hasattr(func, PARAMS_SETS_ATTR):
             setattr(func, PARAMS_SETS_ATTR, [])
-        params = InlineParamsSet(*unnamed_values, **named_values)
+        params = InlineDataValues(*unnamed_values, **named_values)
         getattr(func, PARAMS_SETS_ATTR).insert(0, params)
         return func
     return wrapper
@@ -88,7 +88,7 @@ def file_data(filepath, encoding=None):
     def wrapper(func):
         if not hasattr(func, PARAMS_SETS_ATTR):
             setattr(func, PARAMS_SETS_ATTR, [])
-        params = FileParamsSet(filepath, encoding=encoding)
+        params = FileDataValues(filepath, encoding=encoding)
         getattr(func, PARAMS_SETS_ATTR).insert(0, params)
         return func
     return wrapper
@@ -173,7 +173,7 @@ def add_test(cls, func, params):
 
 class ParamsFailure:
     """
-    FileParamsSet generates an instance of this class instead of instances of
+    FileDataValues generates an instance of this class instead of instances of
     Params in case it cannot load the data file. A fake test method is
     generated instead of a regular one if it has an instance of this class
     among its parameters.
@@ -284,55 +284,48 @@ class Params:
         return self
 
 
-class BaseParamsSet(object):
+class InlineDataValues(object):
     """
-    It is convenient that InlineParamsSet and FileParamsSet implement the same
-    interface. This base class provides convenient implementations of common
-    methods.
+    This class represents values supplied to a ``data`` decorator.
 
-    """
-
-    def __init__(self):
-        self.pending_unpack = 0
-
-    def unpack(self):
-        """
-        Keep count of the number of times arguments should be unpacked.
-
-        This method is called directly by the @unpack decorator.
-
-        """
-        self.pending_unpack = self.pending_unpack + 1
-
-    def use_class(self, cls):
-        """
-        FileParamsSet needs to know the class of the decorated test so that it
-        knows the base path for loading the data file. However, the class is
-        not known when the object is created. This method provides a way to
-        supply it later on.
-
-        """
-        return self
-
-
-class InlineParamsSet(BaseParamsSet):
-    """
-    This class represents test parameters supplied in a single @data decorator.
-
-    The object is an iterator that returns individual parameters as instances
-    of Params.
+    Instances of this class are generators which yield an instance of Params
+    for each positional and keyword argument passed to the constructor.
 
     """
 
     def __init__(self, *unnamed_values, **named_values):
-        super(InlineParamsSet, self).__init__()
+        """
+        Stores all arguments passed to the constructor for later use.
+
+        """
+        self.unpack_count = 0
         self.unnamed_values = unnamed_values
         self.named_values = named_values
+
+    def unpack(self):
+        """
+        Increases by one the number of times values should be unpacked before
+        passing them to the test function.
+
+        This method is called directly by the ``unpack`` decorator.
+
+        """
+        self.unpack_count = self.unpack_count + 1
+
+    def use_class(self, cls):
+        """
+        Does nothing and returns self.
+
+        This method just makes sure that `InlineDataValues` and
+        `FileDataValues` implement the same interface.
+
+        """
+        return self
 
     def __iter__(self):
         for idx, value in enumerate(self.unnamed_values):
             name = make_params_name(idx, None, value)
-            yield Params(name, [value], {}).unpack(self.pending_unpack)
+            yield Params(name, [value], {}).unpack(self.unpack_count)
 
         for idx, key in enumerate(
                 sorted(self.named_values),
@@ -340,30 +333,56 @@ class InlineParamsSet(BaseParamsSet):
         ):
             value = self.named_values[key]
             name = make_params_name(idx, key, value)
-            yield Params(name, [value], {}).unpack(self.pending_unpack)
+            yield Params(name, [value], {}).unpack(self.unpack_count)
 
 
-class FileParamsSet(BaseParamsSet):
-    """This class represents test parameters from a JSON file specified in a
-    @file_data decorator.
+class FileDataValues(object):
+    """This class represents values supplied to a ``file_data`` decorator.
 
-    The object is an iterator that returns individual parameters as instances
-    of Params or, if the file could not be loaded, a single instance of
-    ParamsFailure.
+    Instances of this class are generators which load data from a given JSON
+    file and yield an instance of Params for each member of the top-level
+    structure (``list`` or ``dict``).
 
-    Note that the file is not loaded until the iterator interface is invoked.
+    The generator yields just one item if it fails to load data from the file.
+    The item is an instance of ParamsFailure that carries details about the
+    failure.
+
     """
 
     def __init__(self, filepath, encoding=None):
-        super(FileParamsSet, self).__init__()
+        """
+        Stores all arguments passed to the constructor for later use.
+
+        """
+        self.unpack_count = 0
         self.pathbase = ''
         self.filepath = filepath
         self.encoding = encoding
 
     def use_class(self, cls):
+        """
+        Sets base path for reading the file to the directory that contains the
+        module where the class ``cls`` is defined.
+
+        """
+
+        # Is there perhaps a way the constructor could retrieve this
+        # information somehow? This smells like a workaround that messes the
+        # interface.
+
         cls_path = os.path.abspath(inspect.getsourcefile(cls))
         self.pathbase = os.path.dirname(cls_path)
         return self
+
+    def unpack(self):
+        """
+        Increase by one the number of times values should be unpacked before
+        passing them to the test function.
+
+        This method is called directly by the @unpack decorator.
+
+        """
+        self.unpack_count = self.unpack_count + 1
 
     def load_data(self):
         try:
@@ -393,13 +412,13 @@ class FileParamsSet(BaseParamsSet):
         elif isinstance(data, list):
             for idx, value in enumerate(data):
                 name = make_params_name(idx, None, value)
-                yield Params(name, [value], {}).unpack(self.pending_unpack)
+                yield Params(name, [value], {}).unpack(self.unpack_count)
 
         elif isinstance(data, dict):
             for idx, key in enumerate(sorted(data)):
                 value = data[key]
                 name = make_params_name(idx, key, value)
-                yield Params(name, [value], {}).unpack(self.pending_unpack)
+                yield Params(name, [value], {}).unpack(self.unpack_count)
 
 
 # Test name generation

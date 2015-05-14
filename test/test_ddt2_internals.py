@@ -201,8 +201,8 @@ class TestParams(TestCase):
 
 class TestParamsSet(TestCase):
 
-    def test__InlineParamsSet_generates_unnamed_and_named_Params(self):
-        ps = ddt.InlineParamsSet('b', 'a', z='c', y='d')
+    def test__InlineDataValues_generates_unnamed_and_named_Params(self):
+        ps = ddt.InlineDataValues('b', 'a', z='c', y='d')
 
         params = list(ps)
         names = ['0_b', '1_a', '2_y', '3_z']
@@ -215,8 +215,8 @@ class TestParamsSet(TestCase):
             self.assertEqual(p.args, v)
             self.assertEqual(p.kwargs, {})
 
-    def test__FileParamsSet_generates_unnamed_Params_from_list(self):
-        ps = ddt.FileParamsSet('test_data_list.json')
+    def test__FileDataValues_generates_unnamed_Params_from_list(self):
+        ps = ddt.FileDataValues('test_data_list.json')
         ps.use_class(self.__class__)
 
         params = list(ps)
@@ -230,8 +230,8 @@ class TestParamsSet(TestCase):
             self.assertEqual(p.args, v)
             self.assertEqual(p.kwargs, {})
 
-    def test__FileParamsSet_generates_named_Params_from_dict(self):
-        ps = ddt.FileParamsSet('test_data_dict.json')
+    def test__FileDataValues_generates_named_Params_from_dict(self):
+        ps = ddt.FileDataValues('test_data_dict.json')
         ps.use_class(self.__class__)
 
         params = list(ps)
@@ -245,8 +245,8 @@ class TestParamsSet(TestCase):
             self.assertEqual(p.args, v)
             self.assertEqual(p.kwargs, {})
 
-    def test__FileParamsSet_generates_ParamsFailure_if_file_not_found(self):
-        ps = ddt.FileParamsSet('test_no_such_file.json')
+    def test__FileDataValues_generates_ParamsFailure_if_file_not_found(self):
+        ps = ddt.FileDataValues('test_no_such_file.json')
         ps.use_class(self.__class__)
 
         params = list(ps)
@@ -261,8 +261,8 @@ class TestParamsSet(TestCase):
             self.assertIsInstance(params[0].reason, FileNotFoundError)
         self.assertIn("No such file or directory", str(params[0].reason))
 
-    def test__FileParamsSet_generates_ParamsFailure_on_invalid_JSON(self):
-        ps = ddt.FileParamsSet('test_data_invalid.json')
+    def test__FileDataValues_generates_ParamsFailure_on_invalid_JSON(self):
+        ps = ddt.FileDataValues('test_data_invalid.json')
         ps.use_class(self.__class__)
 
         params = list(ps)
