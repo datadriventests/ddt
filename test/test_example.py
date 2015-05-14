@@ -39,13 +39,13 @@ class FooTestCase(unittest.TestCase):
     def test_file_data_list(self, value):
         self.assertTrue(is_a_greeting(value))
 
-    @data((3, 2), (4, 3), (5, 3))
     @unpack
+    @data((3, 2), (4, 3), (5, 3))
     def test_tuples_extracted_into_arguments(self, first_value, second_value):
         self.assertTrue(first_value > second_value)
 
-    @data([3, 2], [4, 3], [5, 3])
     @unpack
+    @data([3, 2], [4, 3], [5, 3])
     def test_list_extracted_into_arguments(self, first_value, second_value):
         self.assertTrue(first_value > second_value)
 

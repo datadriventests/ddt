@@ -71,7 +71,7 @@ def test_data_decorator():
     extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), (1, 2))
+    assert_equal(getattr(data_hello, extra_attr)[0].unnamed_values, (1, 2))
 
 
 def test_file_data_decorator_with_dict():
@@ -84,7 +84,7 @@ def test_file_data_decorator_with_dict():
 
     pre_size = len(hello.__dict__)
     keys = set(hello.__dict__.keys())
-    data_hello = data("test_data_dict.json")(hello)
+    data_hello = file_data("test_data_dict.json")(hello)
 
     dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
@@ -93,7 +93,10 @@ def test_file_data_decorator_with_dict():
     extra_attrs = dh_keys - keys
     assert_equal(len(extra_attrs), 1)
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), ("test_data_dict.json",))
+    assert_equal(
+        getattr(data_hello, extra_attr)[0].filepath,
+        "test_data_dict.json"
+    )
 
 
 is_test = lambda x: x.startswith('test_')
@@ -130,8 +133,8 @@ def test_file_data_test_names_dict():
     test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
     created_tests = set([
-        "test_something_again_{0}_{1}".format(index + 1, name)
-        for index, name in enumerate(test_data.keys())
+        "test_something_again__{0}_{1}".format(index, name)
+        for index, name in enumerate(sorted(test_data.keys()))
     ])
 
     assert_equal(tests, created_tests)
@@ -176,7 +179,11 @@ def test_feed_data_file_data_missing_json():
     obj = FileDataMissingDummy()
     for test in tests:
         method = getattr(obj, test)
-        assert_raises(ValueError, method)
+        if six.PY2:
+            assert_raises(IOError, method)
+
+        if six.PY3:
+            assert_raises(FileNotFoundError, method)
 
 
 def test_ddt_data_name_attribute():
@@ -202,8 +209,8 @@ def test_ddt_data_name_attribute():
     setattr(Mytest, 'test_hello', data_hello)
 
     ddt_mytest = ddt(Mytest)
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_1_data1'))
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_2_2'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello__0_data1'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello__1_2'))
 
 
 def test_ddt_data_unicode():
@@ -224,13 +231,13 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__u2603'))
+        assert_is_not_none(getattr(Mytest, 'test_hello__0_ascii'))
+        assert_is_not_none(getattr(Mytest, 'test_hello__1_non_ascii_u2603'))
         if is_hash_randomized():
-            assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+            assert_is_not_none(getattr(Mytest, 'test_hello__2'))
         else:
             assert_is_not_none(getattr(Mytest,
-                                       'test_hello_3__u__u2603____data__'))
+                                       'test_hello__2_u_u2603_data'))
 
     elif six.PY3:
 
@@ -240,12 +247,12 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__'))
+        assert_is_not_none(getattr(Mytest, 'test_hello__0_ascii'))
+        assert_is_not_none(getattr(Mytest, 'test_hello__1_non_ascii'))
         if is_hash_randomized():
-            assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+            assert_is_not_none(getattr(Mytest, 'test_hello__2'))
         else:
-            assert_is_not_none(getattr(Mytest, 'test_hello_3________data__'))
+            assert_is_not_none(getattr(Mytest, 'test_hello__2_data'))
 
 
 def test_feed_data_with_invalid_identifier():
@@ -259,6 +266,6 @@ def test_feed_data_with_invalid_identifier():
     method = getattr(obj, tests[0])
     assert_equal(
         method.__name__,
-        'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
+        'test_data_with_invalid_identifier__0_32v2_g_Gmw845h_W_b53wi'
     )
     assert_equal(method(), '32v2 g #Gmw845h$W b53wi.')
