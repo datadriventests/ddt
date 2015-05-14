@@ -181,7 +181,7 @@ def add_test(cls, func, params):
 # Internal data structures
 
 
-class ParamsFailure:
+class ParamsFailure(object):
     """
     FileDataValues generates an instance of this class instead of instances of
     Params in case it cannot load the data file. A fake test method is
@@ -223,7 +223,7 @@ class ParamsFailure:
         return ParamsFailure(new_name, self.reason)
 
 
-class Params:
+class Params(object):
     """
     Instances of Params form a semigroup with respect to addition.
     ``Params(None, [], {})`` constitutes the identity. The ``unpack()``
