@@ -7,6 +7,7 @@
 
 import inspect
 import io
+import itertools
 import json
 import os
 import re
@@ -19,181 +20,108 @@ __version__ = '1.0.0'
 # They are added to the decorated test method and processed later
 # by the `ddt` class decorator.
 
-DATA_ATTR = '%values'      # store the data the test must run with
-FILE_ATTR = '%file_path'   # store the path to JSON file
-UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
+PARAMS_SETS_ATTR = '%params_sets'   # store a list of *ParamsSet objects
+UNPACKALL_ATTR = '%unpackall'       # remember @unpackall decorators
+
+
+# Public interface - Decorators
 
 
 def unpack(func):
     """
-    Method decorator to add unpack feature.
+    Method decorator to unpack parameters from the next (syntactically)
+    parameters set (``@data`` or ``@file_data`` decorator) by one level.
+
+    Multiple levels are unpacked if ``@unpack`` and ``@unpackall`` are combined
+    and/or applied multiple times.
 
     """
-    setattr(func, UNPACK_ATTR, True)
+    getattr(func, PARAMS_SETS_ATTR)[0].unpack()
     return func
 
 
-def data(*values):
+def unpackall(func):
     """
-    Method decorator to add to your test methods.
+    Method decorator to unpack parameters in all parameter sets by one level.
+
+    Multiple levels are unpacked if ``@unpack`` and ``@unpackall`` are combined
+    and/or applied multiple times.
+
+    """
+    setattr(func, UNPACKALL_ATTR, getattr(func, UNPACKALL_ATTR, 0) + 1)
+    return func
+
+
+def data(*unnamed_values, **named_values):
+    """
+    Method decorator to supply parameters to your test methods in-line.
 
     Should be added to methods of instances of ``unittest.TestCase``.
 
+    Keyword arguments can be used to explicitly define names of values to be
+    used in names of created test methods.
+
     """
     def wrapper(func):
-        setattr(func, DATA_ATTR, values)
+        if not hasattr(func, PARAMS_SETS_ATTR):
+            setattr(func, PARAMS_SETS_ATTR, [])
+        params = InlineParamsSet(*unnamed_values, **named_values)
+        getattr(func, PARAMS_SETS_ATTR).insert(0, params)
         return func
     return wrapper
 
 
-def file_data(value):
+def file_data(filepath, encoding=None):
     """
-    Method decorator to add to your test methods.
+    Method decorator to supply parameters to your test method from a JSON file.
 
     Should be added to methods of instances of ``unittest.TestCase``.
 
-    ``value`` should be a path relative to the directory of the file
-    containing the decorated ``unittest.TestCase``. The file
-    should contain JSON encoded data, that can either be a list or a
-    dict.
+    ``filepath`` should be a path relative to the directory of the file
+    containing the decorated ``unittest.TestCase``.
 
-    In case of a list, each value in the list will correspond to one
-    test case, and the value will be concatenated to the test method
-    name.
-
-    In case of a dict, keys will be used as suffixes to the name of the
-    test case, and values will be fed as test data.
+    The file should contain JSON-encoded data, that can either be a list or a
+    dict. A list supplies unnamed parameters. A dict supplies named parameters
+    where keys are used to identify individual parameters.
 
     """
     def wrapper(func):
-        setattr(func, FILE_ATTR, value)
+        if not hasattr(func, PARAMS_SETS_ATTR):
+            setattr(func, PARAMS_SETS_ATTR, [])
+        params = FileParamsSet(filepath, encoding=encoding)
+        getattr(func, PARAMS_SETS_ATTR).insert(0, params)
         return func
     return wrapper
-
-
-def mk_test_name(name, value, index=0):
-    """
-    Generate a new name for a test case.
-
-    It will take the original test name and append an ordinal index and a
-    string representation of the value, and convert the result into a valid
-    python identifier by replacing extraneous characters with ``_``.
-
-    If hash randomization is enabled (a feature available since 2.7.3/3.2.3
-    and enabled by default since 3.3) and a "non-trivial" value is passed
-    this will omit the name argument by default. Set `PYTHONHASHSEED`
-    to a fixed value before running tests in these cases to get the
-    names back consistently or use the `__name__` attribute on data values.
-
-    A "trivial" value is a plain scalar, or a tuple or list consisting
-    only of trivial values.
-
-    """
-
-    # We avoid doing str(value) if all of the following hold:
-    #
-    # * Python version is 2.7.3 or newer (for 2 series) or 3.2.3 or
-    #   newer (for 3 series). Also sys.flags.hash_randomization didn't
-    #   exist before these.
-    # * sys.flags.hash_randomization is set to True
-    # * PYTHONHASHSEED is **not** defined in the environment
-    # * Given `value` argument is not a trivial scalar (None, str,
-    #   int, float).
-    #
-    # Trivial scalar values are passed as is in all cases.
-
-    trivial_types = (type(None), bool, str, int, float)
-    try:
-        trivial_types += (unicode,)
-    except NameError:
-        pass
-
-    def is_trivial(value):
-        if isinstance(value, trivial_types):
-            return True
-
-        if isinstance(value, (list, tuple)):
-            return all(map(is_trivial, value))
-
-        return False
-
-    if is_hash_randomized() and not is_trivial(value):
-        return "{0}_{1}".format(name, index + 1)
-
-    try:
-        value = str(value)
-    except UnicodeEncodeError:
-        # fallback for python2
-        value = value.encode('ascii', 'backslashreplace')
-    test_name = "{0}_{1}_{2}".format(name, index + 1, value)
-    return re.sub('\W|^(?=\d)', '_', test_name)
-
-
-def feed_data(func, new_name, *args, **kwargs):
-    """
-    This internal method decorator feeds the test data item to the test.
-
-    """
-    @wraps(func)
-    def wrapper(self):
-        return func(self, *args, **kwargs)
-    wrapper.__name__ = new_name
-    return wrapper
-
-
-def add_test(cls, test_name, func, *args, **kwargs):
-    """
-    Add a test case to this class.
-
-    The test will be based on an existing function but will give it a new
-    name.
-
-    """
-    setattr(cls, test_name, feed_data(func, test_name, *args, **kwargs))
-
-
-def process_file_data(cls, name, func, file_attr):
-    """
-    Process the parameter in the `file_data` decorator.
-
-    """
-    cls_path = os.path.abspath(inspect.getsourcefile(cls))
-    data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
-
-    def _raise_ve(*args):  # pylint: disable-msg=W0613
-        raise ValueError("%s does not exist" % file_attr)
-
-    if os.path.exists(data_file_path) is False:
-        test_name = mk_test_name(name, "error")
-        add_test(cls, test_name, _raise_ve, None)
-    else:
-        data = json.loads(open(data_file_path).read())
-        for i, elem in enumerate(data):
-            if isinstance(data, dict):
-                key, value = elem, data[elem]
-                test_name = mk_test_name(name, key, i)
-            elif isinstance(data, list):
-                value = elem
-                test_name = mk_test_name(name, value, i)
-            add_test(cls, test_name, func, value)
 
 
 def ddt(cls):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
 
-    Apply this decorator to the test case class, and then
-    decorate test methods with ``@data``.
+    Apply this decorator to the test case class, and then decorate test methods
+    with ``@data``, ``@file_data``, ``@unpack``, and ``@unpackall``.
 
-    For each method decorated with ``@data``, this will effectively create as
-    many methods as data items are passed as parameters to ``@data``.
+    For each method decorated with ``@data`` and ``@file_data``, this will
+    effectively create one method for each member of the Cartesian product of
+    data items passed to ``@data`` or read from a JSON file by ``@file_data``.
 
     The names of the test methods follow the pattern
-    ``original_test_name_{ordinal}_{data}``. ``ordinal`` is the position of the
-    data argument, starting with 1.
+    ``original_test_name(__{ordinal}_{data})+``.
 
-    For data we use a string representation of the data value converted into a
-    valid python identifier.  If ``data.__name__`` exists, we use that instead.
+    The part ``__{ordinal}_{data}`` is repeated as many times as there are
+    nested ``@data`` and ``@file_data`` decorators.
+
+    ``ordinal`` is the position of a particular data item in the list of
+    options represented by the corresponding decorator. Positions are numbered
+    from 0. Keyword arguments (for ``@data``) and members of top-level dict
+    (for ``@data_file``) are ordered according to their keys.
+
+    ``data`` attempts to provide human readable identification of the data item
+    with the following priority: 1) The keyword is used for data items passed
+    as keyword arguments (for ``@data``) or members of the top-level dict (for
+    ``@file_data``). 2) The ``__name__`` attribute of the value if it exists.
+    3) An explicit namestring representation of the data value converted into a
+    valid python identifier, if possible. 4) Only the position is used.
 
     For each method decorated with ``@file_data('test_data.json')``, the
     decorator will try to load the test_data.json file located relative
@@ -203,23 +131,41 @@ def ddt(cls):
 
     """
     for name, func in list(cls.__dict__.items()):
-        if hasattr(func, DATA_ATTR):
-            for i, v in enumerate(getattr(func, DATA_ATTR)):
-                test_name = mk_test_name(name, getattr(v, "__name__", v), i)
-                if hasattr(func, UNPACK_ATTR):
-                    if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(cls, test_name, func, *v)
-                    else:
-                        # unpack dictionary
-                        add_test(cls, test_name, func, **v)
-                else:
-                    add_test(cls, test_name, func, v)
+        if hasattr(func, PARAMS_SETS_ATTR):
+            test_vectors = itertools.product(*(
+                map(
+                    lambda s: s.use_class(cls),
+                    getattr(func, PARAMS_SETS_ATTR)
+                )
+            ))
+            for vector in test_vectors:
+                params = sum(vector, Params(name, [], {}))
+                params.unpack(getattr(func, UNPACKALL_ATTR, 0))
+                add_test(cls, func, params)
             delattr(cls, name)
-        elif hasattr(func, FILE_ATTR):
-            file_attr = getattr(func, FILE_ATTR)
-            process_file_data(cls, name, func, file_attr)
-            delattr(cls, name)
+
     return cls
+
+
+# Adding new tests
+
+
+def add_test(cls, func, params):
+    """Add a test derived from an original function and specific combination of
+    values provided by ``@data`` and ``@file_data`` decorators.
+
+    """
+    if isinstance(params, Params):
+        @wraps(func)
+        def test_case_func(self):
+            return func(self, *params.args, **params.kwargs)
+
+    else:
+        def test_case_func(self):
+            raise params.reason
+
+    test_case_func.__name__ = params.name
+    setattr(cls, params.name, test_case_func)
 
 
 # Internal data structures
