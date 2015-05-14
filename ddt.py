@@ -6,6 +6,7 @@
 # https://github.com/txels/ddt/blob/master/LICENSE.md
 
 import inspect
+import io
 import json
 import os
 import re
@@ -335,6 +336,124 @@ class Params:
         self.args.extend(other.args)
         self.kwargs.update(other.kwargs)
         return self
+
+
+class BaseParamsSet(object):
+    """
+    It is convenient that InlineParamsSet and FileParamsSet implement the same
+    interface. This base class provides convenient implementations of common
+    methods.
+
+    """
+
+    def __init__(self):
+        self.pending_unpack = 0
+
+    def unpack(self):
+        """
+        Keep count of the number of times arguments should be unpacked.
+
+        This method is called directly by the @unpack decorator.
+
+        """
+        self.pending_unpack = self.pending_unpack + 1
+
+    def use_class(self, cls):
+        """
+        FileParamsSet needs to know the class of the decorated test so that it
+        knows the base path for loading the data file. However, the class is
+        not known when the object is created. This method provides a way to
+        supply it later on.
+
+        """
+        return self
+
+
+class InlineParamsSet(BaseParamsSet):
+    """
+    This class represents test parameters supplied in a single @data decorator.
+
+    The object is an iterator that returns individual parameters as instances
+    of Params.
+
+    """
+
+    def __init__(self, *unnamed_values, **named_values):
+        super(InlineParamsSet, self).__init__()
+        self.unnamed_values = unnamed_values
+        self.named_values = named_values
+
+    def __iter__(self):
+        for idx, value in enumerate(self.unnamed_values):
+            name = make_params_name(idx, None, value)
+            yield Params(name, [value], {}).unpack(self.pending_unpack)
+
+        for idx, key in enumerate(
+                sorted(self.named_values),
+                start=len(self.unnamed_values)
+        ):
+            value = self.named_values[key]
+            name = make_params_name(idx, key, value)
+            yield Params(name, [value], {}).unpack(self.pending_unpack)
+
+
+class FileParamsSet(BaseParamsSet):
+    """This class represents test parameters from a JSON file specified in a
+    @file_data decorator.
+
+    The object is an iterator that returns individual parameters as instances
+    of Params or, if the file could not be loaded, a single instance of
+    ParamsFailure.
+
+    Note that the file is not loaded until the iterator interface is invoked.
+    """
+
+    def __init__(self, filepath, encoding=None):
+        super(FileParamsSet, self).__init__()
+        self.pathbase = ''
+        self.filepath = filepath
+        self.encoding = encoding
+
+    def use_class(self, cls):
+        cls_path = os.path.abspath(inspect.getsourcefile(cls))
+        self.pathbase = os.path.dirname(cls_path)
+        return self
+
+    def load_data(self):
+        try:
+            filepath = os.path.join(self.pathbase, self.filepath)
+            with io.open(filepath, encoding=self.encoding) as file:
+                data = json.load(file)
+
+            return data
+
+        except OSError as reason:
+            # Python 3
+            return ParamsFailure(reason.__class__.__name__, reason)
+
+        except IOError as reason:
+            # Python 2
+            return ParamsFailure(reason.__class__.__name__, reason)
+
+        except ValueError as reason:
+            return ParamsFailure(reason.__class__.__name__, reason)
+
+    def __iter__(self):
+        data = self.load_data()
+
+        if isinstance(data, ParamsFailure):
+            yield data
+
+        elif isinstance(data, list):
+            for idx, value in enumerate(data):
+                name = make_params_name(idx, None, value)
+                yield Params(name, [value], {}).unpack(self.pending_unpack)
+
+        elif isinstance(data, dict):
+            for idx, key in enumerate(sorted(data)):
+                value = data[key]
+                name = make_params_name(idx, key, value)
+                yield Params(name, [value], {}).unpack(self.pending_unpack)
 
 
 # Test name generation

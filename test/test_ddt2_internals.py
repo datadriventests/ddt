@@ -1,6 +1,8 @@
 
 from unittest import TestCase
 
+import six
+
 import ddt
 
 
@@ -195,3 +197,81 @@ class TestParams(TestCase):
 
     def test__combine_names__value_value(self):
         self.assertEqual(ddt.combine_names('name1', 'name2'), 'name1__name2')
+
+
+class TestParamsSet(TestCase):
+
+    def test__InlineParamsSet_generates_unnamed_and_named_Params(self):
+        ps = ddt.InlineParamsSet('b', 'a', z='c', y='d')
+
+        params = list(ps)
+        names = ['0_b', '1_a', '2_y', '3_z']
+        values = [['b'], ['a'], ['d'], ['c']]
+
+        self.assertEqual(len(values), 4)
+        for p, n, v in zip(params, names, values):
+            self.assertIsInstance(p, ddt.Params)
+            self.assertEqual(p.name, n)
+            self.assertEqual(p.args, v)
+            self.assertEqual(p.kwargs, {})
+
+    def test__FileParamsSet_generates_unnamed_Params_from_list(self):
+        ps = ddt.FileParamsSet('test_data_list.json')
+        ps.use_class(self.__class__)
+
+        params = list(ps)
+        names = ['0_Hello', '1_Goodbye']
+        values = [['Hello'], ['Goodbye']]
+
+        self.assertEqual(len(values), 2)
+        for p, n, v in zip(params, names, values):
+            self.assertIsInstance(p, ddt.Params)
+            self.assertEqual(p.name, n)
+            self.assertEqual(p.args, v)
+            self.assertEqual(p.kwargs, {})
+
+    def test__FileParamsSet_generates_named_Params_from_dict(self):
+        ps = ddt.FileParamsSet('test_data_dict.json')
+        ps.use_class(self.__class__)
+
+        params = list(ps)
+        names = ['0_sorted_list', '1_unsorted_list']
+        values = [[[15, 12, 50]], [[10, 12, 15]]]
+
+        self.assertEqual(len(values), 2)
+        for p, n, v in zip(params, names, values):
+            self.assertIsInstance(p, ddt.Params)
+            self.assertEqual(p.name, n)
+            self.assertEqual(p.args, v)
+            self.assertEqual(p.kwargs, {})
+
+    def test__FileParamsSet_generates_ParamsFailure_if_file_not_found(self):
+        ps = ddt.FileParamsSet('test_no_such_file.json')
+        ps.use_class(self.__class__)
+
+        params = list(ps)
+
+        self.assertEqual(len(params), 1)
+        self.assertIsInstance(params[0], ddt.ParamsFailure)
+        if six.PY2:
+            self.assertEqual(params[0].name, 'IOError')
+            self.assertIsInstance(params[0].reason, IOError)
+        if six.PY3:
+            self.assertEqual(params[0].name, 'FileNotFoundError')
+            self.assertIsInstance(params[0].reason, FileNotFoundError)
+        self.assertIn("No such file or directory", str(params[0].reason))
+
+    def test__FileParamsSet_generates_ParamsFailure_on_invalid_JSON(self):
+        ps = ddt.FileParamsSet('test_data_invalid.json')
+        ps.use_class(self.__class__)
+
+        params = list(ps)
+
+        self.assertEqual(len(params), 1)
+        self.assertIsInstance(params[0], ddt.ParamsFailure)
+        self.assertEqual(params[0].name, 'ValueError')
+        self.assertIsInstance(params[0].reason, ValueError)
+        self.assertIn(
+            "Invalid control character at: line 2 column 11",
+            str(params[0].reason)
+        )
