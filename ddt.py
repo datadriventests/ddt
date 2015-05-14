@@ -24,6 +24,16 @@ PARAMS_SETS_ATTR = '%params_sets'   # store a list of *ParamsSet objects
 UNPACKALL_ATTR = '%unpackall'       # remember @unpackall decorators
 
 
+# Types that can be converted into valid identifiers safely.
+TRIVIAL_TYPES = (type(None), bool, str, int, float)
+
+# Extend the list a bit for Python2
+try:
+    TRIVIAL_TYPES += (unicode,)
+except NameError:
+    pass
+
+
 # Public interface - Decorators
 
 
@@ -438,28 +448,12 @@ def is_hash_randomized():
             'PYTHONHASHSEED' not in os.environ)
 
 
-def trivial_types():
-    """
-    Return a tuple of types types that can be converted into valid
-    identifiers easily.
-
-    """
-    trivial_types = (type(None), bool, str, int, float)
-
-    try:
-        trivial_types += (unicode,)
-    except NameError:
-        pass
-
-    return trivial_types
-
-
 def is_trivial(value):
     """
-    Check whether a value is of a trivial type w.r.t. `trivial_types()`.
+    Check whether a value is of a trivial type (w.r.t. `TRIVIAL_TYPES`).
 
     """
-    if isinstance(value, trivial_types()):
+    if isinstance(value, TRIVIAL_TYPES):
         return True
 
     if isinstance(value, (list, tuple)):
