@@ -3,7 +3,11 @@ Some simple functions that we will use in our tests.
 """
 
 
-def larger_than_two(value):
+def larger_than_two(value, base=10):
+    try:
+        value = int(value, base=base)
+    except:
+        pass
     return value > 2
 
 
