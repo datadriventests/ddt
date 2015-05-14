@@ -419,11 +419,14 @@ class TestDecorators(TestCase):
     def test__file_data_decor_does_not_cause_resource_warning(self):
         # ResourceWarning does not exist in Python 2 (?)
         if six.PY3:
+            # let's violate priniciples of PEP8 to become pep8-compliant :-(
+            # works around F821 in Python2
+            resource_warning = eval('ResourceWarning')
             with warnings.catch_warnings(record=True) as w:
 
                 warnings.resetwarnings()  # clear all filters
                 warnings.simplefilter('ignore')  # ignore all
-                warnings.simplefilter('always', ResourceWarning)  # add filter
+                warnings.simplefilter('always', resource_warning)  # add filter
 
                 @ddt.ddt
                 class SampleTestCase(object):
