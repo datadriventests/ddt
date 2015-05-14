@@ -70,14 +70,6 @@ def file_data(value):
     return wrapper
 
 
-def is_hash_randomized():
-    return (((sys.hexversion >= 0x02070300 and
-              sys.hexversion < 0x03000000) or
-             (sys.hexversion >= 0x03020300)) and
-            sys.flags.hash_randomization and
-            'PYTHONHASHSEED' not in os.environ)
-
-
 def mk_test_name(name, value, index=0):
     """
     Generate a new name for a test case.
@@ -227,3 +219,135 @@ def ddt(cls):
             process_file_data(cls, name, func, file_attr)
             delattr(cls, name)
     return cls
+
+
+# Test name generation
+
+
+def is_hash_randomized():
+    """
+    Check whether hashes are randomized in the current Python version.
+
+    See `convert_to_name` for details.
+
+    """
+    return (((sys.hexversion >= 0x02070300 and
+              sys.hexversion < 0x03000000) or
+             (sys.hexversion >= 0x03020300)) and
+            sys.flags.hash_randomization and
+            'PYTHONHASHSEED' not in os.environ)
+
+
+def trivial_types():
+    """
+    Return a tuple of types types that can be converted into valid
+    identifiers easily.
+
+    """
+    trivial_types = (type(None), bool, str, int, float)
+
+    try:
+        trivial_types += (unicode,)
+    except NameError:
+        pass
+
+    return trivial_types
+
+
+def is_trivial(value):
+    """
+    Check whether a value is of a trivial type w.r.t. `trivial_types()`.
+
+    """
+    if isinstance(value, trivial_types()):
+        return True
+
+    if isinstance(value, (list, tuple)):
+        return all(map(is_trivial, value))
+
+    return False
+
+
+def convert_to_name(value):
+    """
+    Convert a value into a string that can safely be used in an attribute name.
+
+    Returns a string representation of the value with all extraneous characters
+    replaced with ``_``. Sequences of underscores are reduced to one, leading
+    and trailing underscores are trimmed.
+
+    Raises ValueError if it cannot convert the value (see the note below).
+
+    Note: If hash randomization is enabled (a feature available since
+    2.7.3/3.2.3 and enabled by default since 3.3) and a "non-trivial" value is
+    passed this will omit the name argument by default. Set `PYTHONHASHSEED` to
+    a fixed value before running tests in these cases to get the names back
+    consistently or use the `__name__` attribute on data values.
+
+    A "trivial" value is a plain scalar, or a tuple or list consisting
+    only of trivial values.
+
+    """
+
+    # We avoid doing str(value) if all of the following hold:
+    #
+    # * Python version is 2.7.3 or newer (for 2 series) or 3.2.3 or
+    #   newer (for 3 series). Also sys.flags.hash_randomization didn't
+    #   exist before these.
+    # * sys.flags.hash_randomization is set to True
+    # * PYTHONHASHSEED is **not** defined in the environment
+    # * Given `value` argument is not a trivial scalar (None, str,
+    #   int, float).
+    #
+    # Trivial scalar values are passed as is in all cases.
+
+    if not is_trivial(value) and is_hash_randomized():
+        raise ValueError("Cannot convert complex type: {0}", str(type(value)))
+
+    try:
+        value = str(value)
+    except UnicodeEncodeError:
+        # fallback for python2
+        value = value.encode('ascii', 'backslashreplace')
+
+    value = re.sub('\W', '_', value)
+    return re.sub('_+', '_', value).strip('_')
+
+
+def make_params_name(idx, name, value):
+    """
+    Generate a name for a value in a parameters set.
+
+    It will take the ordinal index of the value in the set and a name
+    constructed from one of the follwing items (with decreasing priority):
+    `name`, `value.__name__`, `value`. See also `convert_to_name`.
+
+    If all of that fails, only the ordinal index is used.
+    """
+
+    if name is None:
+        name = getattr(value, '__name__', value)
+
+    try:
+        name = convert_to_name(name)
+        return "{0}_{1}".format(idx, name)
+
+    except ValueError:
+        pass
+
+    return "{0}".format(idx)
+
+
+def combine_names(name1, name2):
+    """
+    Combine two names using two underscore characters ``__``. ``None`` can be
+    used as the identity.
+
+    """
+    if name2 is None:
+        return name1
+    else:
+        if name1 is None:
+            return name2
+        else:
+            return"{0}__{1}".format(name1, name2)
