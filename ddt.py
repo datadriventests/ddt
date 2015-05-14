@@ -401,16 +401,16 @@ class FileDataValues(object):
 
         except IOError as reason:
             # IOError is an alias for OSError since Python 3.3
-            return ParamsFailure(reason.__class__.__name__, reason)
+            return reason
 
         except ValueError as reason:
-            return ParamsFailure(reason.__class__.__name__, reason)
+            return reason
 
     def __iter__(self):
         values = self.load_values()
 
-        if isinstance(values, ParamsFailure):
-            yield values
+        if isinstance(values, Exception):
+            yield ParamsFailure(values.__class__.__name__, values)
 
         elif isinstance(values, list):
             for idx, value in enumerate(values):
