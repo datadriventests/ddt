@@ -145,6 +145,15 @@ def feed_data(func, new_name, *args, **kwargs):
     def wrapper(self):
         return func(self, *args, **kwargs)
     wrapper.__name__ = new_name
+    # Try to call format on the docstring
+    if func.__doc__:
+        try:
+            wrapper.__doc__ = func.__doc__.format(*args, **kwargs)
+        except (IndexError, KeyError):
+            # Maybe the user has added some of the formating strings
+            # unintentionally in the docstring. Do not raise an exception as it
+            # could be that he is not aware of the formating feature.
+            pass
     return wrapper
 
 

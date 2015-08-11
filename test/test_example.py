@@ -58,3 +58,24 @@ class FooTestCase(unittest.TestCase):
     @data(u'ascii', u'non-ascii-\N{SNOWMAN}')
     def test_unicode(self, value):
         self.assertIn(value, (u'ascii', u'non-ascii-\N{SNOWMAN}'))
+
+    @data(3, 4, 12, 23)
+    def test_larger_than_two_with_doc(self, value):
+        """Larger than two with value {0}"""
+        self.assertTrue(larger_than_two(value))
+
+    @data(3, 4, 12, 23)
+    def test_doc_missing_args(self, value):
+        """Missing args with value {0} and {1}"""
+        self.assertTrue(larger_than_two(value))
+
+    @data(3, 4, 12, 23)
+    def test_doc_missing_kargs(self, value):
+        """Missing kargs with value {value} {value2}"""
+        self.assertTrue(larger_than_two(value))
+
+    @data([3, 2], [4, 3], [5, 3])
+    @unpack
+    def test_list_extracted_with_doc(self, first_value, second_value):
+        """Extract into args with first value {} and second value {}"""
+        self.assertTrue(first_value > second_value)
