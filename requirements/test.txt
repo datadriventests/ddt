@@ -2,4 +2,4 @@ codecov
 coverage
 flake8
 nose
-six
+six>=1.4.0
