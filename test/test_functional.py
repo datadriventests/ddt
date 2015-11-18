@@ -248,11 +248,11 @@ def test_ddt_data_object():
 
     @ddt
     class Mytest(object):
-        @data(object)
+        @data(object())
         def test_object(self, val):
             pass
 
-    assert_is_not_none(getattr(Mytest, 'test_object_1_object'))
+    assert_is_not_none(getattr(Mytest, 'test_object_1'))
 
 
 def test_feed_data_with_invalid_identifier():
