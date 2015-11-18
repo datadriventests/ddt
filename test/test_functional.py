@@ -3,7 +3,7 @@ import json
 
 import six
 
-from ddt import ddt, data, file_data, is_hash_randomized
+from ddt import ddt, data, file_data
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
 
@@ -226,11 +226,7 @@ def test_ddt_data_unicode():
 
         assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__u2603'))
-        if is_hash_randomized():
-            assert_is_not_none(getattr(Mytest, 'test_hello_3'))
-        else:
-            assert_is_not_none(getattr(Mytest,
-                                       'test_hello_3__u__u2603____data__'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_3'))
 
     elif six.PY3:
 
@@ -242,10 +238,21 @@ def test_ddt_data_unicode():
 
         assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__'))
-        if is_hash_randomized():
-            assert_is_not_none(getattr(Mytest, 'test_hello_3'))
-        else:
-            assert_is_not_none(getattr(Mytest, 'test_hello_3________data__'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+
+
+def test_ddt_data_object():
+    """
+    Test not using value if non-trivial arguments
+    """
+
+    @ddt
+    class Mytest(object):
+        @data(object)
+        def test_object(self, val):
+            pass
+
+    assert_is_not_none(getattr(Mytest, 'test_object_1_object'))
 
 
 def test_feed_data_with_invalid_identifier():
