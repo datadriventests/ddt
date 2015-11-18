@@ -11,7 +11,7 @@ import os
 import re
 from functools import wraps
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
