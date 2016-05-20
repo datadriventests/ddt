@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/txels/ddt.svg)](https://travis-ci.org/txels/ddt)
 [![Code Health](https://landscape.io/github/txels/ddt/master/landscape.svg)](https://landscape.io/github/txels/ddt/master)
-[![Can I Use Python 3?](https://caniusepython3.com/project/ddt.svg)](https://caniusepython3.com/project/ddt)
+<!-- [![Can I Use Python 3?](https://caniusepython3.com/project/ddt.svg)](https://caniusepython3.com/project/ddt) -->
 [![codecov.io](https://codecov.io/github/txels/ddt/coverage.svg?branch=master)](https://codecov.io/github/txels/ddt)
 [![Version](https://img.shields.io/pypi/v/ddt.svg)](https://pypi.python.org/pypi/ddt)
 [![Downloads](https://img.shields.io/pypi/dm/ddt.svg)](https://pypi.python.org/pypi/ddt)
