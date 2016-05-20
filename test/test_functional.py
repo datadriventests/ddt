@@ -96,14 +96,15 @@ def test_file_data_decorator_with_dict():
     assert_equal(getattr(data_hello, extra_attr), ("test_data_dict.json",))
 
 
-is_test = lambda x: x.startswith('test_')
+def _is_test(x):
+    return x.startswith('test_')
 
 
 def test_ddt():
     """
     Test the ``ddt`` class decorator
     """
-    tests = len(list(filter(is_test, Dummy.__dict__)))
+    tests = len(list(filter(_is_test, Dummy.__dict__)))
     assert_equal(tests, 4)
 
 
@@ -112,7 +113,7 @@ def test_file_data_test_creation():
     Test that the ``file_data`` decorator creates two tests
     """
 
-    tests = len(list(filter(is_test, FileDataDummy.__dict__)))
+    tests = len(list(filter(_is_test, FileDataDummy.__dict__)))
     assert_equal(tests, 2)
 
 
@@ -124,7 +125,7 @@ def test_file_data_test_names_dict():
     when it is parsed as a dictionary.
     """
 
-    tests = set(filter(is_test, FileDataDummy.__dict__))
+    tests = set(filter(_is_test, FileDataDummy.__dict__))
 
     tests_dir = os.path.dirname(__file__)
     test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
@@ -141,7 +142,7 @@ def test_feed_data_data():
     """
     Test that data is fed to the decorated tests
     """
-    tests = filter(is_test, Dummy.__dict__)
+    tests = filter(_is_test, Dummy.__dict__)
 
     values = []
     obj = Dummy()
@@ -156,7 +157,7 @@ def test_feed_data_file_data():
     """
     Test that data is fed to the decorated tests from a file
     """
-    tests = filter(is_test, FileDataDummy.__dict__)
+    tests = filter(_is_test, FileDataDummy.__dict__)
 
     values = []
     obj = FileDataDummy()
@@ -171,7 +172,7 @@ def test_feed_data_file_data_missing_json():
     """
     Test that a ValueError is raised
     """
-    tests = filter(is_test, FileDataMissingDummy.__dict__)
+    tests = filter(_is_test, FileDataMissingDummy.__dict__)
 
     obj = FileDataMissingDummy()
     for test in tests:
@@ -259,7 +260,7 @@ def test_feed_data_with_invalid_identifier():
     """
     Test that data is fed to the decorated tests
     """
-    tests = list(filter(is_test, DummyInvalidIdentifier.__dict__))
+    tests = list(filter(_is_test, DummyInvalidIdentifier.__dict__))
     assert_equal(len(tests), 1)
 
     obj = DummyInvalidIdentifier()
