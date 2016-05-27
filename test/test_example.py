@@ -11,7 +11,9 @@ else:
     del yaml
 
 # A good-looking decorator
-needs_yaml = unittest.skipIf(do_not_have_yaml_support, "Need YAML to run this test")
+needs_yaml = unittest.skipIf(
+    do_not_have_yaml_support, "Need YAML to run this test"
+)
 
 
 class Mylist(list):

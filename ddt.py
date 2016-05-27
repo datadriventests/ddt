@@ -163,7 +163,9 @@ def process_file_data(cls, name, func, file_attr):
         raise ValueError("%s does not exist" % file_attr)
 
     def _raise_need_yaml_error(*args):  # pylint: disable-msg=W0613
-        raise ValueError("%s is a YAML file, please install PyYAML" % file_attr)
+        raise ValueError(
+            "%s is a YAML file, please install PyYAML" % file_attr
+        )
 
     # If file does not exist, provide an error function instead
     if os.path.exists(data_file_path) is False:
