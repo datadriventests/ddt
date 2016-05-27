@@ -11,6 +11,13 @@ import os
 import re
 from functools import wraps
 
+try:
+    import yaml
+except Exception:
+    _have_yaml = False
+else:
+    _have_yaml = True
+
 __version__ = '1.0.3'
 
 # These attributes will not conflict with any real python attribute
@@ -152,25 +159,41 @@ def process_file_data(cls, name, func, file_attr):
     cls_path = os.path.abspath(inspect.getsourcefile(cls))
     data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
 
-    def _raise_ve(*args):  # pylint: disable-msg=W0613
+    def _raise_not_exists_error(*args):  # pylint: disable-msg=W0613
         raise ValueError("%s does not exist" % file_attr)
 
+    def _raise_need_yaml_error(*args):  # pylint: disable-msg=W0613
+        raise ValueError("%s is a YAML file, please install PyYAML" % file_attr)
+
+    # If file does not exist, provide an error function instead
     if os.path.exists(data_file_path) is False:
         test_name = mk_test_name(name, "error")
-        add_test(cls, test_name, _raise_ve, None)
+        add_test(cls, test_name, _raise_not_exists_error, None)
+        return
+
+    # Load the data as YAML or JSON
+    if data_file_path.endswith((".yml", ".yaml")):
+        # Don't have YAML but want to use YAML file.
+        if not _have_yaml:
+            test_name = mk_test_name(name, "error")
+            add_test(cls, test_name, _raise_need_yaml_error, None)
+            return
+        data = yaml.load(open(data_file_path).read())
     else:
         data = json.loads(open(data_file_path).read())
-        for i, elem in enumerate(data):
-            if isinstance(data, dict):
-                key, value = elem, data[elem]
-                test_name = mk_test_name(name, key, i)
-            elif isinstance(data, list):
-                value = elem
-                test_name = mk_test_name(name, value, i)
-            if isinstance(value, dict):
-                add_test(cls, test_name, func, **value)
-            else:
-                add_test(cls, test_name, func, value)
+
+    # Add tests from data
+    for i, elem in enumerate(data):
+        if isinstance(data, dict):
+            key, value = elem, data[elem]
+            test_name = mk_test_name(name, key, i)
+        elif isinstance(data, list):
+            value = elem
+            test_name = mk_test_name(name, value, i)
+        if isinstance(value, dict):
+            add_test(cls, test_name, func, **value)
+        else:
+            add_test(cls, test_name, func, value)
 
 
 def ddt(cls):
