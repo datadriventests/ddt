@@ -5,14 +5,14 @@ from test.mycode import larger_than_two, has_three_elements, is_a_greeting
 try:
     import yaml
 except Exception:
-    do_not_have_yaml_support = True
+    have_yaml_support = False
 else:
-    do_not_have_yaml_support = False
+    have_yaml_support = True
     del yaml
 
 # A good-looking decorator
-needs_yaml = unittest.skipIf(
-    do_not_have_yaml_support, "Need YAML to run this test"
+needs_yaml = unittest.skipUnless(
+    have_yaml_support, "Need YAML to run this test"
 )
 
 
