@@ -173,16 +173,20 @@ def process_file_data(cls, name, func, file_attr):
         add_test(cls, test_name, _raise_not_exists_error, None)
         return
 
-    # Load the data as YAML or JSON
-    if data_file_path.endswith((".yml", ".yaml")):
-        # Don't have YAML but want to use YAML file.
-        if not _have_yaml:
-            test_name = mk_test_name(name, "error")
-            add_test(cls, test_name, _raise_need_yaml_error, None)
-            return
-        data = yaml.load(open(data_file_path).read())
-    else:
-        data = json.loads(open(data_file_path).read())
+    _is_yaml_file = data_file_path.endswith((".yml", ".yaml"))
+
+    # Don't have YAML but want to use YAML file.
+    if _is_yaml_file and not _have_yaml:
+        test_name = mk_test_name(name, "error")
+        add_test(cls, test_name, _raise_need_yaml_error, None)
+        return
+
+    with open(data_file_path) as f:
+        # Load the data from YAML or JSON
+        if _is_yaml_file:
+            data = yaml.load(f)
+        else:
+            data = json.load(f)
 
     # Add tests from data
     for i, elem in enumerate(data):
