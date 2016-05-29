@@ -184,7 +184,7 @@ def process_file_data(cls, name, func, file_attr):
     with open(data_file_path) as f:
         # Load the data from YAML or JSON
         if _is_yaml_file:
-            data = yaml.load(f)
+            data = yaml.safe_load(f)
         else:
             data = json.load(f)
 
