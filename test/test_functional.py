@@ -6,6 +6,13 @@ import six
 from ddt import ddt, data, file_data
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
+from test.mycode import has_three_elements
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 
 @ddt
 class Dummy(object):
@@ -42,13 +49,25 @@ class FileDataDummy(object):
 
 
 @ddt
-class FileDataMissingDummy(object):
+class JSONFileDataMissingDummy(object):
     """
     Dummy class to test the file_data decorator on when
     JSON file is missing
     """
 
     @file_data("test_data_dict_missing.json")
+    def test_something_again(self, value):
+        return value
+
+
+@ddt
+class YAMLFileDataMissingDummy(object):
+    """
+    Dummy class to test the file_data decorator on when
+    JSON file is missing
+    """
+
+    @file_data("test_data_dict_missing.yaml")
     def test_something_again(self, value):
         return value
 
@@ -170,11 +189,23 @@ def test_feed_data_file_data():
 
 def test_feed_data_file_data_missing_json():
     """
-    Test that a ValueError is raised
+    Test that a ValueError is raised when JSON file is missing
     """
-    tests = filter(_is_test, FileDataMissingDummy.__dict__)
+    tests = filter(_is_test, JSONFileDataMissingDummy.__dict__)
 
-    obj = FileDataMissingDummy()
+    obj = JSONFileDataMissingDummy()
+    for test in tests:
+        method = getattr(obj, test)
+        assert_raises(ValueError, method)
+
+
+def test_feed_data_file_data_missing_yaml():
+    """
+    Test that a ValueError is raised when YAML file is missing
+    """
+    tests = filter(_is_test, YAMLFileDataMissingDummy.__dict__)
+
+    obj = YAMLFileDataMissingDummy()
     for test in tests:
         method = getattr(obj, test)
         assert_raises(ValueError, method)
@@ -270,3 +301,14 @@ def test_feed_data_with_invalid_identifier():
         'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
     )
     assert_equal(method(), '32v2 g #Gmw845h$W b53wi.')
+
+
+@mock.patch('ddt._have_yaml', False)
+def test_load_yaml_without_yaml_support():
+    """
+    Test that YAML files are not loaded if YAML is not installed.
+    """
+
+    @file_data('test_data_dict.yaml')
+    def test_file_data_yaml_dict(value):
+        self.assertTrue(has_three_elements(value))
