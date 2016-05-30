@@ -62,7 +62,7 @@ class JSONFileDataMissingDummy(object):
 class YAMLFileDataMissingDummy(object):
     """
     Dummy class to test the file_data decorator on when
-    JSON file is missing
+    YAML file is missing
     """
 
     @file_data("test_data_dict_missing.yaml")
