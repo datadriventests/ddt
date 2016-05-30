@@ -5,7 +5,9 @@ import six
 import mock
 
 from ddt import ddt, data, file_data
-from nose.tools import assert_equal, assert_is_not_none, assert_raises
+from nose.tools import (
+    assert_true, assert_equal, assert_is_not_none, assert_raises
+)
 
 from test.mycode import has_three_elements
 
@@ -307,4 +309,4 @@ def test_load_yaml_without_yaml_support():
 
     @file_data('test_data_dict.yaml')
     def test_file_data_yaml_dict(value):
-        self.assertTrue(has_three_elements(value))
+        assert_true(has_three_elements(value))
