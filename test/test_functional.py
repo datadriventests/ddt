@@ -2,16 +2,12 @@ import os
 import json
 
 import six
+import mock
 
 from ddt import ddt, data, file_data
 from nose.tools import assert_equal, assert_is_not_none, assert_raises
 
 from test.mycode import has_three_elements
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 
 
 @ddt
