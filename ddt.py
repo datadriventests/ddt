@@ -13,7 +13,7 @@ from functools import wraps
 
 try:
     import yaml
-except Exception:
+except ImportError:  # pragma: no cover
     _have_yaml = False
 else:
     _have_yaml = True

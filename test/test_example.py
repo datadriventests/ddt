@@ -4,7 +4,7 @@ from test.mycode import larger_than_two, has_three_elements, is_a_greeting
 
 try:
     import yaml
-except Exception:
+except ImportError:  # pragma: no cover
     have_yaml_support = False
 else:
     have_yaml_support = True
