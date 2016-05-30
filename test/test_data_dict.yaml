@@ -1,0 +1,6 @@
+unsorted_list:
+  - 10
+  - 15
+  - 12
+
+sorted_list: [ 15, 12, 50 ]

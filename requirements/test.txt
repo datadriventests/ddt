@@ -3,3 +3,5 @@ coverage
 flake8
 nose
 six>=1.4.0
+PyYAML
+mock

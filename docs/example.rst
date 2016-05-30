@@ -5,7 +5,12 @@ DDT consists of a class decorator ``ddt`` (for your ``TestCase`` subclass)
 and two method decorators (for your tests that want to be multiplied):
 
 * ``data``: contains as many arguments as values you want to feed to the test.
-* ``file_data``: will load test data from a JSON file.
+* ``file_data``: will load test data from a JSON or YAML file.
+
+.. note::
+
+   Only files ending with ".yml" and ".yaml" are loaded as YAML files. All
+   other files are loaded as JSON files.
 
 Normally each value within ``data`` will be passed as a single argument to
 your test method. If these values are e.g. tuples, you will have to unpack them
@@ -28,6 +33,14 @@ and ``test_data_list.json``:
 
 .. literalinclude:: ../test/test_data_list.json
    :language: javascript
+
+.. literalinclude:: ../test/test_data_dict.yaml
+   :language: yaml
+
+and ``test_data_list.yaml``:
+
+.. literalinclude:: ../test/test_data_list.yaml
+   :language: yaml
 
 And then run them with your favourite test runner, e.g. if you use nose::
 

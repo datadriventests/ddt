@@ -11,6 +11,13 @@ import os
 import re
 from functools import wraps
 
+try:
+    import yaml
+except ImportError:  # pragma: no cover
+    _have_yaml = False
+else:
+    _have_yaml = True
+
 __version__ = '1.0.3'
 
 # These attributes will not conflict with any real python attribute
@@ -152,25 +159,56 @@ def process_file_data(cls, name, func, file_attr):
     cls_path = os.path.abspath(inspect.getsourcefile(cls))
     data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
 
-    def _raise_ve(*args):  # pylint: disable-msg=W0613
-        raise ValueError("%s does not exist" % file_attr)
+    def create_error_func(message):  # pylint: disable-msg=W0613
+        def func(*args):
+            raise ValueError(message % file_attr)
+        return func
 
-    if os.path.exists(data_file_path) is False:
+    # If file does not exist, provide an error function instead
+    if not os.path.exists(data_file_path):
         test_name = mk_test_name(name, "error")
-        add_test(cls, test_name, _raise_ve, None)
-    else:
-        data = json.loads(open(data_file_path).read())
-        for i, elem in enumerate(data):
-            if isinstance(data, dict):
-                key, value = elem, data[elem]
-                test_name = mk_test_name(name, key, i)
-            elif isinstance(data, list):
-                value = elem
-                test_name = mk_test_name(name, value, i)
-            if isinstance(value, dict):
-                add_test(cls, test_name, func, **value)
-            else:
-                add_test(cls, test_name, func, value)
+        add_test(cls, test_name, create_error_func("%s does not exist"), None)
+        return
+
+    _is_yaml_file = data_file_path.endswith((".yml", ".yaml"))
+
+    # Don't have YAML but want to use YAML file.
+    if _is_yaml_file and not _have_yaml:
+        test_name = mk_test_name(name, "error")
+        add_test(
+            cls,
+            test_name,
+            create_error_func("%s is a YAML file, please install PyYAML"),
+            None
+        )
+        return
+
+    with open(data_file_path) as f:
+        # Load the data from YAML or JSON
+        if _is_yaml_file:
+            data = yaml.safe_load(f)
+        else:
+            data = json.load(f)
+
+    _add_tests_from_data(cls, name, func, data)
+
+
+def _add_tests_from_data(cls, name, func, data):
+    """
+    Add tests from data loaded from the data file into the class
+
+    """
+    for i, elem in enumerate(data):
+        if isinstance(data, dict):
+            key, value = elem, data[elem]
+            test_name = mk_test_name(name, key, i)
+        elif isinstance(data, list):
+            value = elem
+            test_name = mk_test_name(name, value, i)
+        if isinstance(value, dict):
+            add_test(cls, test_name, func, **value)
+        else:
+            add_test(cls, test_name, func, value)
 
 
 def ddt(cls):
