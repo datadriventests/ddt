@@ -159,18 +159,15 @@ def process_file_data(cls, name, func, file_attr):
     cls_path = os.path.abspath(inspect.getsourcefile(cls))
     data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
 
-    def _raise_not_exists_error(*args):  # pylint: disable-msg=W0613
-        raise ValueError("%s does not exist" % file_attr)
-
-    def _raise_need_yaml_error(*args):  # pylint: disable-msg=W0613
-        raise ValueError(
-            "%s is a YAML file, please install PyYAML" % file_attr
-        )
+    def create_error_func(message):  # pylint: disable-msg=W0613
+        def func(*args):
+            raise ValueError(message % file_attr)
+        return func
 
     # If file does not exist, provide an error function instead
-    if os.path.exists(data_file_path) is False:
+    if not os.path.exists(data_file_path):
         test_name = mk_test_name(name, "error")
-        add_test(cls, test_name, _raise_not_exists_error, None)
+        add_test(cls, test_name, create_error_func("%s does not exist"), None)
         return
 
     _is_yaml_file = data_file_path.endswith((".yml", ".yaml"))
@@ -178,7 +175,12 @@ def process_file_data(cls, name, func, file_attr):
     # Don't have YAML but want to use YAML file.
     if _is_yaml_file and not _have_yaml:
         test_name = mk_test_name(name, "error")
-        add_test(cls, test_name, _raise_need_yaml_error, None)
+        add_test(
+            cls,
+            test_name,
+            create_error_func("%s is a YAML file, please install PyYAML"),
+            None
+        )
         return
 
     with open(data_file_path) as f:
