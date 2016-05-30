@@ -188,7 +188,14 @@ def process_file_data(cls, name, func, file_attr):
         else:
             data = json.load(f)
 
-    # Add tests from data
+    _add_tests_from_data(cls, name, func, data)
+
+
+def _add_tests_from_data(cls, name, func, data):
+    """
+    Add tests from data loaded from the data file into the class
+
+    """
     for i, elem in enumerate(data):
         if isinstance(data, dict):
             key, value = elem, data[elem]
