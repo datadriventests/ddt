@@ -59,8 +59,18 @@ def data(*values):
     Should be added to methods of instances of ``unittest.TestCase``.
 
     """
+    return idata(values)
+
+
+def idata(iterable):
+    """
+    Method decorator to add to your test methods.
+
+    Should be added to methods of instances of ``unittest.TestCase``.
+
+    """
     def wrapper(func):
-        setattr(func, DATA_ATTR, values)
+        setattr(func, DATA_ATTR, iterable)
         return func
     return wrapper
 
