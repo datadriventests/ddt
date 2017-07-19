@@ -57,7 +57,7 @@ class FooTestCase(unittest.TestCase):
         a, b = value
         self.assertGreater(a, b)
         self.assertIsNotNone(getattr(value, "__name__"))
-        self.assertIsNotNone(getattr(value, "__doc__")
+        self.assertIsNotNone(getattr(value, "__doc__"))
 
     @file_data("test_data_dict_dict.json")
     def test_file_data_json_dict_dict(self, start, end, value):
