@@ -236,6 +236,41 @@ def test_ddt_data_name_attribute():
     assert_is_not_none(getattr(ddt_mytest, 'test_hello_2_2'))
 
 
+def test_ddt_data_doc_attribute():
+    """
+    Test the ``__doc__`` attribute handling of ``data`` items with ``ddt``
+    """
+
+    def hello():
+        """testFunctionDocstring {6}
+
+        :param: None
+        :return: None
+        """
+        pass
+
+    class Myint(int):
+        pass
+
+    class Mytest(object):
+        pass
+
+    d1 = Myint(1)
+    d1.__name__ = 'case1'
+    d1.__doc__ = """docstring1"""
+
+    d2 = Myint(2)
+
+    data_hello = data(d1, d2)(hello)
+    setattr(Mytest, 'test_hello', data_hello)
+
+    ddt_mytest = ddt(Mytest)
+    assert_is_not_none(getattr(getattr(ddt_mytest, 'test_hello_1_case1'),
+                       '__doc__'))
+    assert_is_not_none(getattr(getattr(ddt_mytest, 'test_hello_2_2'),
+                       '__doc__'))
+
+
 def test_ddt_data_unicode():
     """
     Test that unicode strings are converted to function names correctly
