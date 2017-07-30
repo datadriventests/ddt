@@ -4,7 +4,11 @@ import json
 import six
 import mock
 
-from ddt import ddt, data, file_data
+from ddt import (
+    ddt, data, file_data, unpack,
+    mockdata, MOCK_ATTR,
+    mockdata_multiple_args, mockdata_dict, mockdata_single_arg
+)
 from nose.tools import (
     assert_true, assert_equal, assert_is_not_none, assert_raises
 )
@@ -68,6 +72,22 @@ class YAMLFileDataMissingDummy(object):
     @file_data("test_data_dict_missing.yaml")
     def test_something_again(self, value):
         return value
+
+
+@ddt
+class MockDataDummy(object):
+    """
+    Dummy class to test the mockdata decorator on
+    """
+
+    @data([mock.patch('ddt.ddt'), 5, AttributeError()])
+    @unpack
+    @mockdata
+    def test_something(self, mock_obj, return_value, side_effect):
+        mock_obj.return_value = return_value
+        mock_obj.side_effect = side_effect
+
+        return mock_obj
 
 
 def test_data_decorator():
@@ -320,3 +340,79 @@ def test_load_yaml_without_yaml_support():
     for test in tests:
         method = getattr(obj, test)
         assert_raises(ValueError, method)
+
+
+def test_feed_data_mockdata():
+    """
+    Test that data is fed to the decorated tests
+    """
+    tests = list(filter(_is_test, MockDataDummy.__dict__))
+    assert_equal(len(tests), 1)
+
+    obj = MockDataDummy()
+    method_result = getattr(obj, tests[0])()
+
+    assert_true(isinstance(type(method_result), type(mock.MagicMock)))
+    assert_equal(5, method_result.return_value)
+
+    assert_equal(
+        AttributeError().__class__, method_result.side_effect.__class__
+    )
+
+
+def test_mockdata_decorator():
+    """
+    Test that func decorated by `mockdata` has `MOCK_ATTR` (`%mockdata`).
+    """
+
+    def hello():
+        pass
+
+    mockdata(hello)
+
+    assert_true(hello.__getattribute__(MOCK_ATTR))
+
+
+def test_mockdata_single_arg():
+    """
+    Test returning mock `MagicMock` object if passed argument is a mock `patch`
+    """
+    arg = mock.patch('ddt.ddt')
+    result = mockdata_single_arg(arg)
+    assert_true(isinstance(type(result), type(mock.MagicMock)))
+
+    arg = 3
+    result = mockdata_single_arg(arg)
+    assert_equal(None, result)
+
+
+def test_mockdata_dict():
+    """
+    Test that user defined attributes are set to mock `MagicMock` object.
+    """
+    moke_attr = {
+        'patch': mock.patch('ddt.ddt'),
+        'return_value': 5,
+        'side_effect': AttributeError()
+    }
+
+    result = mockdata_dict(moke_attr)
+    mock_obj = result[0]  # result is tuple
+
+    assert_true(isinstance(type(mock_obj), type(mock.MagicMock)))
+    assert_equal(5, mock_obj.return_value)
+    assert_equal(AttributeError().__class__, mock_obj.side_effect.__class__)
+
+
+def test_mockdata_multiple_args():
+    """
+    Test that mock `patch` args are converted to mock `MagicMock` objects.
+    """
+    values = [mock.patch('ddt.ddt'), mock.patch('ddt.unpack'), 5, 'Mock']
+
+    result = list(mockdata_multiple_args(values))
+
+    assert_true(isinstance(type(result[0]), type(mock.MagicMock)))
+    assert_true(isinstance(type(result[1]), type(mock.MagicMock)))
+    assert_equal(values[2], result[2])
+    assert_equal(values[3], result[3])

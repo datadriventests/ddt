@@ -11,6 +11,8 @@ import os
 import re
 from functools import wraps
 
+import mock
+
 try:
     import yaml
 except ImportError:  # pragma: no cover
@@ -27,6 +29,7 @@ __version__ = '1.1.1'
 DATA_ATTR = '%values'      # store the data the test must run with
 FILE_ATTR = '%file_path'   # store the path to JSON file
 UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
+MOCK_ATTR = '%mockdata'    # store mock oriented data
 
 
 try:
@@ -49,6 +52,15 @@ def unpack(func):
 
     """
     setattr(func, UNPACK_ATTR, True)
+    return func
+
+
+def mockdata(func):
+    """
+    Method decorator to add mock oriented functionality.
+
+    """
+    setattr(func, MOCK_ATTR, True)
     return func
 
 
@@ -222,6 +234,46 @@ def _add_tests_from_data(cls, name, func, data):
             add_test(cls, test_name, func, value)
 
 
+def mockdata_multiple_args(v):
+    """
+    Convert mock `MagicMock` object from mock `patch` from passed arguments.
+    """
+    values = ()
+
+    for el in list(v):
+        if isinstance(el, mock.mock._patch):
+            mock_obj = el.start()
+            values += (mock_obj,)
+        else:
+            values += (el,)
+
+    return values
+
+
+def mockdata_dict(v):
+    """
+    Set user defined attributes as dict keys to mock `MagicMock` object.
+    """
+    allowed_attributes = ['return_value', 'side_effect']
+
+    with v['patch'] as mock_object:
+        for attr in allowed_attributes:
+            defined_attr = v.get(attr, 'User did not define mock attribute.')
+
+            if defined_attr is not 'User did not define mock attribute.':
+                setattr(mock_object, attr, defined_attr)
+
+    return (mock_object,)
+
+
+def mockdata_single_arg(arg):
+    """
+    Return mock `MagicMock` object if passed argument is a mock `patch`.
+    """
+    if isinstance(arg, mock.mock._patch):
+        return arg.start()
+
+
 def ddt(cls):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
@@ -251,13 +303,31 @@ def ddt(cls):
             for i, v in enumerate(getattr(func, DATA_ATTR)):
                 test_name = mk_test_name(name, getattr(v, "__name__", v), i)
                 if hasattr(func, UNPACK_ATTR):
+
                     if isinstance(v, tuple) or isinstance(v, list):
+
+                        if hasattr(func, MOCK_ATTR):
+                            # mock as multiple args
+                            v = mockdata_multiple_args(v)
+
                         add_test(cls, test_name, func, *v)
                     else:
-                        # unpack dictionary
-                        add_test(cls, test_name, func, **v)
+
+                        if hasattr(func, MOCK_ATTR):
+                            # mock with attr as dict key
+                            v = mockdata_dict(v)
+                            add_test(cls, test_name, func, *v)
+
+                        else:
+                            # unpack dictionary
+                            add_test(cls, test_name, func, **v)
                 else:
+                    if hasattr(func, MOCK_ATTR):
+                        # mock as single argument
+                        v = mockdata_single_arg(v)
+
                     add_test(cls, test_name, func, v)
+
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
