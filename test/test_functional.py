@@ -148,7 +148,8 @@ def test_file_data_test_names_dict():
     test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
     created_tests = set([
-        "test_something_again_{0}_{1}".format(index + 1, name)
+        "test_something_again_{0}_{1}".format(
+        	'0' * (5 - len(str(index + 1))) + str(index + 1), name)
         for index, name in enumerate(test_data.keys())
     ])
 
@@ -232,8 +233,8 @@ def test_ddt_data_name_attribute():
     setattr(Mytest, 'test_hello', data_hello)
 
     ddt_mytest = ddt(Mytest)
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_1_data1'))
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_2_2'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_00001_data1'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_00002_2'))
 
 
 def test_ddt_data_unicode():
@@ -254,9 +255,9 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__u2603'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_00001_ascii'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_00002_non_ascii__u2603'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_00003'))
 
     elif six.PY3:
 
@@ -282,7 +283,7 @@ def test_ddt_data_object():
         def test_object(self, val):
             pass
 
-    assert_is_not_none(getattr(Mytest, 'test_object_1'))
+    assert_is_not_none(getattr(Mytest, 'test_object_00001'))
 
 
 def test_feed_data_with_invalid_identifier():
@@ -296,7 +297,7 @@ def test_feed_data_with_invalid_identifier():
     method = getattr(obj, tests[0])
     assert_equal(
         method.__name__,
-        'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
+        'test_data_with_invalid_identifier_00001_32v2_g__Gmw845h_W_b53wi_'
     )
     assert_equal(method(), '32v2 g #Gmw845h$W b53wi.')
 

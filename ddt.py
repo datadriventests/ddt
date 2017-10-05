@@ -27,8 +27,8 @@ __version__ = '1.1.1'
 DATA_ATTR = '%values'      # store the data the test must run with
 FILE_ATTR = '%file_path'   # store the path to JSON file
 UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
-# Digits of the largest index of cases for list/tuple, or default = 5 for generator
-INDEX_LEN = len(str(len(DATA_ATTR))) if isinstance(DATA_ATTR, (list, tuple)) else 5
+# Digits of the largest index for list/tuple, or default = 5 for generator
+I_LEN = len(str(len(DATA_ATTR))) if isinstance(DATA_ATTR, (list, tuple)) else 5
 
 
 try:
@@ -122,8 +122,8 @@ def mk_test_name(name, value, index=0):
 
     # Add zeros before index to keep order
     index = str(index + 1)
-    if len(index) < INDEX_LEN:
-        index = '0' * (INDEX_LEN - len(index)) + index
+    if len(index) < I_LEN:
+        index = '0' * (I_LEN - len(index)) + index
     if not is_trivial(value):
         return "{0}_{1}".format(name, index)
     try:
