@@ -147,9 +147,9 @@ def test_file_data_test_names_dict():
     tests_dir = os.path.dirname(__file__)
     test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
+    index_len = len(str(len(test_data)))
     created_tests = set([
-        "test_something_again_{0}_{1}".format
-        ('0' * (5 - len(str(index + 1))) + str(index + 1), name)
+        "test_something_again_{0:0{2}}_{1}".format(index + 1, name, index_len)
         for index, name in enumerate(test_data.keys())
     ])
 
@@ -255,6 +255,7 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
+        print(Mytest.__dict__)
         assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr
                            (Mytest, 'test_hello_2_non_ascii__u2603'))

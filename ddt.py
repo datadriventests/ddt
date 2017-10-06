@@ -61,7 +61,7 @@ def data(*values):
 
     """
     global index_len
-    index_len = len(values)
+    index_len = len(str(len(values)))
     return idata(values)
 
 
