@@ -255,7 +255,6 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        print(Mytest.__dict__)
         assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr
                            (Mytest, 'test_hello_2_non_ascii__u2603'))
