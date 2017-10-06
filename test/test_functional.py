@@ -256,8 +256,7 @@ def test_ddt_data_unicode():
                 pass
 
         assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr
-                           (Mytest, 'test_hello_2_non_ascii__u2603'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__u2603'))
         assert_is_not_none(getattr(Mytest, 'test_hello_3'))
 
     elif six.PY3:
