@@ -233,8 +233,8 @@ def test_ddt_data_name_attribute():
     setattr(Mytest, 'test_hello', data_hello)
 
     ddt_mytest = ddt(Mytest)
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_00001_data1'))
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_00002_2'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_1_data1'))
+    assert_is_not_none(getattr(ddt_mytest, 'test_hello_2_2'))
 
 
 def test_ddt_data_unicode():
@@ -255,10 +255,10 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(Mytest, 'test_hello_00001_ascii'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
         assert_is_not_none(getattr
-                           (Mytest, 'test_hello_00002_non_ascii__u2603'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_00003'))
+                           (Mytest, 'test_hello_2_non_ascii__u2603'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_3'))
 
     elif six.PY3:
 
@@ -268,9 +268,9 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(Mytest, 'test_hello_00001_ascii'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_00002_non_ascii__'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_00003'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__'))
+        assert_is_not_none(getattr(Mytest, 'test_hello_3'))
 
 
 def test_ddt_data_object():
@@ -284,7 +284,7 @@ def test_ddt_data_object():
         def test_object(self, val):
             pass
 
-    assert_is_not_none(getattr(Mytest, 'test_object_00001'))
+    assert_is_not_none(getattr(Mytest, 'test_object_1'))
 
 
 def test_feed_data_with_invalid_identifier():
@@ -298,7 +298,7 @@ def test_feed_data_with_invalid_identifier():
     method = getattr(obj, tests[0])
     assert_equal(
         method.__name__,
-        'test_data_with_invalid_identifier_00001_32v2_g__Gmw845h_W_b53wi_'
+        'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
     )
     assert_equal(method(), '32v2 g #Gmw845h$W b53wi.')
 
