@@ -27,6 +27,7 @@ __version__ = '1.1.1'
 DATA_ATTR = '%values'      # store the data the test must run with
 FILE_ATTR = '%file_path'   # store the path to JSON file
 UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
+index_len = 5              # default max length of case index
 
 
 try:
@@ -59,6 +60,8 @@ def data(*values):
     Should be added to methods of instances of ``unittest.TestCase``.
 
     """
+    global index_len
+    index_len = len(str(len(values)))
     return idata(values)
 
 
@@ -118,14 +121,16 @@ def mk_test_name(name, value, index=0):
     only of trivial values.
     """
 
+    # Add zeros before index to keep order
+    index = "{0:0{1}}".format(index + 1, index_len)
     if not is_trivial(value):
-        return "{0}_{1}".format(name, index + 1)
+        return "{0}_{1}".format(name, index)
     try:
         value = str(value)
     except UnicodeEncodeError:
         # fallback for python2
         value = value.encode('ascii', 'backslashreplace')
-    test_name = "{0}_{1}_{2}".format(name, index + 1, value)
+    test_name = "{0}_{1}_{2}".format(name, index, value)
     return re.sub(r'\W|^(?=\d)', '_', test_name)
 
 
