@@ -24,7 +24,12 @@ This allows you to write your tests as:
 .. literalinclude:: ../test/test_example.py
    :language: python
 
-Where ``test_data_dict.json``:
+Where ``test_data_dict_dict.json``:
+
+.. literalinclude:: ../test/test_data_dict_dict.json
+   :language: javascript
+
+and ``test_data_dict.json``:
 
 .. literalinclude:: ../test/test_data_dict.json
    :language: javascript
