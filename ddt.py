@@ -199,12 +199,18 @@ def process_file_data(cls, name, func, file_attr):
         )
         return
 
-    with open(data_file_path, encoding='utf-8') as f:
+    try:
+        f = open(data_file_path, encoding='utf-8')
+    except TypeError:
+        import codecs
+        f = codecs.open(data_file_path, 'r', 'utf-8')
+    finally:
         # Load the data from YAML or JSON
         if _is_yaml_file:
             data = yaml.safe_load(f)
         else:
             data = json.load(f)
+        f.close()
 
     _add_tests_from_data(cls, name, func, data)
 
