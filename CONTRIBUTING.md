@@ -1,5 +1,12 @@
 # Contributing to DDT
 
+This project is currently unmaintained. There are no guarantees that your Pull
+Requests will be acted upon.
+
+If you'd like to step up as a maintainer, apply [here](https://github.com/txels/ddt/issues/59).
+
+# Guidelines
+
 We'll be happy if you want to contribute to the improvement of `ddt`.
 
 Code contributions will take the form of pull requests to
