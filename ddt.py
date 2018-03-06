@@ -199,7 +199,7 @@ def process_file_data(cls, name, func, file_attr):
         )
         return
 
-    with open(data_file_path,coding='utf-8') as f:
+    with open(data_file_path,encoding='utf-8') as f:
         # Load the data from YAML or JSON
         if _is_yaml_file:
             data = yaml.safe_load(f)
