@@ -9,6 +9,7 @@ import inspect
 import json
 import os
 import re
+import codecs
 from functools import wraps
 
 try:
@@ -199,7 +200,7 @@ def process_file_data(cls, name, func, file_attr):
         )
         return
 
-    with open(data_file_path) as f:
+    with codecs.open(data_file_path, 'r', 'utf-8') as f:
         # Load the data from YAML or JSON
         if _is_yaml_file:
             data = yaml.safe_load(f)
