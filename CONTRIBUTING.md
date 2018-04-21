@@ -1,16 +1,11 @@
 # Contributing to DDT
 
-This project is currently unmaintained. There are no guarantees that your Pull
-Requests will be acted upon.
-
-If you'd like to step up as a maintainer, apply [here](https://github.com/txels/ddt/issues/59).
-
-# Guidelines
+## Guidelines
 
 We'll be happy if you want to contribute to the improvement of `ddt`.
 
 Code contributions will take the form of pull requests to
-[the github repo](https://github.com/txels/ddt).
+[the github repo](https://github.com/datadriventests/ddt).
 
 Your PRs are more likely to be merged quickly if:
 
