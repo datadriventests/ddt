@@ -26,6 +26,13 @@ def annotated(a, b):
     return r
 
 
+def annotated2(listIn, name, docstring):
+    r = Mylist(listIn)
+    setattr(r, "__name__", name)
+    setattr(r, "__doc__", docstring)
+    return r
+
+
 @ddt
 class FooTestCase(unittest.TestCase):
     def test_undecorated(self):
@@ -43,6 +50,14 @@ class FooTestCase(unittest.TestCase):
     def test_greater(self, value):
         a, b = value
         self.assertGreater(a, b)
+
+    @data(annotated2([2, 1], 'Test_case_1', """Test docstring 1"""),
+          annotated2([10, 5], 'Test_case_2', """Test docstring 2"""))
+    def test_greater_with_name_docstring(self, value):
+        a, b = value
+        self.assertGreater(a, b)
+        self.assertIsNotNone(getattr(value, "__name__"))
+        self.assertIsNotNone(getattr(value, "__doc__"))
 
     @file_data("test_data_dict_dict.json")
     def test_file_data_json_dict_dict(self, start, end, value):

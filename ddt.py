@@ -135,7 +135,7 @@ def mk_test_name(name, value, index=0):
     return re.sub(r'\W|^(?=\d)', '_', test_name)
 
 
-def feed_data(func, new_name, *args, **kwargs):
+def feed_data(func, new_name, test_docstring, *args, **kwargs):
     """
     This internal method decorator feeds the test data item to the test.
 
@@ -145,19 +145,24 @@ def feed_data(func, new_name, *args, **kwargs):
         return func(self, *args, **kwargs)
     wrapper.__name__ = new_name
     wrapper.__wrapped__ = func
-    # Try to call format on the docstring
-    if func.__doc__:
-        try:
-            wrapper.__doc__ = func.__doc__.format(*args, **kwargs)
-        except (IndexError, KeyError):
-            # Maybe the user has added some of the formating strings
-            # unintentionally in the docstring. Do not raise an exception as it
-            # could be that he is not aware of the formating feature.
-            pass
+    # set docstring if exists
+    if test_docstring is not None:
+        wrapper.__doc__ = test_docstring
+    else:
+        # Try to call format on the docstring
+        if func.__doc__:
+            try:
+                wrapper.__doc__ = func.__doc__.format(*args, **kwargs)
+            except (IndexError, KeyError):
+                # Maybe the user has added some of the formating strings
+                # unintentionally in the docstring. Do not raise an exception
+                # as it could be that user is not aware of the
+                # formating feature.
+                pass
     return wrapper
 
 
-def add_test(cls, test_name, func, *args, **kwargs):
+def add_test(cls, test_name, test_docstring, func, *args, **kwargs):
     """
     Add a test case to this class.
 
@@ -165,7 +170,8 @@ def add_test(cls, test_name, func, *args, **kwargs):
     name.
 
     """
-    setattr(cls, test_name, feed_data(func, test_name, *args, **kwargs))
+    setattr(cls, test_name, feed_data(func, test_name, test_docstring,
+            *args, **kwargs))
 
 
 def process_file_data(cls, name, func, file_attr):
@@ -184,7 +190,9 @@ def process_file_data(cls, name, func, file_attr):
     # If file does not exist, provide an error function instead
     if not os.path.exists(data_file_path):
         test_name = mk_test_name(name, "error")
-        add_test(cls, test_name, create_error_func("%s does not exist"), None)
+        test_docstring = """Error!"""
+        add_test(cls, test_name, test_docstring,
+                 create_error_func("%s does not exist"), None)
         return
 
     _is_yaml_file = data_file_path.endswith((".yml", ".yaml"))
@@ -192,9 +200,11 @@ def process_file_data(cls, name, func, file_attr):
     # Don't have YAML but want to use YAML file.
     if _is_yaml_file and not _have_yaml:
         test_name = mk_test_name(name, "error")
+        test_docstring = """Error!"""
         add_test(
             cls,
             test_name,
+            test_docstring,
             create_error_func("%s is a YAML file, please install PyYAML"),
             None
         )
@@ -223,9 +233,9 @@ def _add_tests_from_data(cls, name, func, data):
             value = elem
             test_name = mk_test_name(name, value, i)
         if isinstance(value, dict):
-            add_test(cls, test_name, func, **value)
+            add_test(cls, test_name, test_name, func, **value)
         else:
-            add_test(cls, test_name, func, value)
+            add_test(cls, test_name, test_name, func, value)
 
 
 def ddt(cls):
@@ -256,14 +266,15 @@ def ddt(cls):
         if hasattr(func, DATA_ATTR):
             for i, v in enumerate(getattr(func, DATA_ATTR)):
                 test_name = mk_test_name(name, getattr(v, "__name__", v), i)
+                test_docstring = getattr(v, "__doc__", None)
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(cls, test_name, func, *v)
+                        add_test(cls, test_name, test_docstring, func, *v)
                     else:
                         # unpack dictionary
-                        add_test(cls, test_name, func, **v)
+                        add_test(cls, test_name, test_docstring, func, **v)
                 else:
-                    add_test(cls, test_name, func, v)
+                    add_test(cls, test_name, test_docstring, func, v)
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
