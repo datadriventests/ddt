@@ -1,9 +1,11 @@
 # Contributing to DDT
 
+## Guidelines
+
 We'll be happy if you want to contribute to the improvement of `ddt`.
 
 Code contributions will take the form of pull requests to
-[the github repo](https://github.com/txels/ddt).
+[the github repo](https://github.com/datadriventests/ddt).
 
 Your PRs are more likely to be merged quickly if:
 

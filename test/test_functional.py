@@ -147,8 +147,9 @@ def test_file_data_test_names_dict():
     tests_dir = os.path.dirname(__file__)
     test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
+    index_len = len(str(len(test_data)))
     created_tests = set([
-        "test_something_again_{0}_{1}".format(index + 1, name)
+        "test_something_again_{0:0{2}}_{1}".format(index + 1, name, index_len)
         for index, name in enumerate(test_data.keys())
     ])
 
