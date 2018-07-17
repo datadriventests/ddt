@@ -267,8 +267,15 @@ def test_ddt_data_doc_attribute():
     setattr(Mytest, 'test_hello', data_hello)
     ddt_mytest = ddt(Mytest)
 
-    assert_equal(getattr(getattr(ddt_mytest, 'test_hello_1_case1'), '__doc__'), d1.__doc__)
-    assert_equal(getattr(getattr(ddt_mytest, 'test_hello_2_case2'), '__doc__'), hello.__doc__)
+    assert_equal(
+        getattr(
+            getattr(ddt_mytest, 'test_hello_1_case1'), '__doc__'), d1.__doc__
+    )
+    assert_equal(
+        getattr(
+            getattr(ddt_mytest, 'test_hello_2_case2'), '__doc__'),
+        hello.__doc__
+    )
 
 
 def test_ddt_data_unicode():
