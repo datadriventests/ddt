@@ -261,15 +261,14 @@ def test_ddt_data_doc_attribute():
     d1.__doc__ = """docstring1"""
 
     d2 = Myint(2)
+    d2.__name__ = 'case2'
 
     data_hello = data(d1, d2)(hello)
     setattr(Mytest, 'test_hello', data_hello)
-
     ddt_mytest = ddt(Mytest)
-    assert_is_not_none(getattr(getattr(ddt_mytest, 'test_hello_1_case1'),
-                       '__doc__'))
-    assert_is_not_none(getattr(getattr(ddt_mytest, 'test_hello_2_2'),
-                       '__doc__'))
+
+    assert_equal(getattr(getattr(ddt_mytest, 'test_hello_1_case1'), '__doc__'), d1.__doc__)
+    assert_equal(getattr(getattr(ddt_mytest, 'test_hello_2_case2'), '__doc__'), hello.__doc__)
 
 
 def test_ddt_data_unicode():

@@ -17,6 +17,7 @@ Contents:
 
    example
    api
+   misc
 
 Indices and tables
 ==================
