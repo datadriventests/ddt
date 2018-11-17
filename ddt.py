@@ -245,7 +245,7 @@ def _is_primitive(obj):
 def _get_test_docstring(func, value):
     """ Returns name for the test based on the following resolution strategy:
     1. Passed value is not a "primitive" and has a docstring, then use it.
-    2. The test itself has a docstring, then use it. 
+    2. The test itself has a docstring, then use it.
     3. In all other cases use the test case name.
     """
     if not _is_primitive(value) and value.__doc__:
@@ -254,7 +254,7 @@ def _get_test_docstring(func, value):
         return func.__doc__
     else:
         return func.__name__
-    
+
 
 def ddt(cls):
     """
