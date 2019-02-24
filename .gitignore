@@ -9,3 +9,4 @@ ddt.egg-info/
 /docs/_build/
 .tox
 .ropeproject
+venv/

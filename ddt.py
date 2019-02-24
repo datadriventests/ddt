@@ -135,7 +135,7 @@ def mk_test_name(name, value, index=0):
     return re.sub(r'\W|^(?=\d)', '_', test_name)
 
 
-def feed_data(func, new_name, test_docstring, *args, **kwargs):
+def feed_data(func, new_name, test_data_docstring, *args, **kwargs):
     """
     This internal method decorator feeds the test data item to the test.
 
@@ -146,8 +146,8 @@ def feed_data(func, new_name, test_docstring, *args, **kwargs):
     wrapper.__name__ = new_name
     wrapper.__wrapped__ = func
     # set docstring if exists
-    if test_docstring is not None:
-        wrapper.__doc__ = test_docstring
+    if test_data_docstring is not None:
+        wrapper.__doc__ = test_data_docstring
     else:
         # Try to call format on the docstring
         if func.__doc__:
@@ -242,18 +242,15 @@ def _is_primitive(obj):
     return not hasattr(obj, '__dict__')
 
 
-def _get_test_docstring(func, value):
-    """ Returns name for the test based on the following resolution strategy:
+def _get_test_data_docstring(func, value):
+    """Returns a docstring from test data based on the following resolution strategy:
     1. Passed value is not a "primitive" and has a docstring, then use it.
-    2. The test itself has a docstring, then use it.
-    3. In all other cases use the test case name.
+    2. In all other cases return None, i.e the test name is used.
     """
     if not _is_primitive(value) and value.__doc__:
         return value.__doc__
-    elif func.__doc__:
-        return func.__doc__
     else:
-        return func.__name__
+        return None
 
 
 def ddt(cls):
@@ -284,15 +281,15 @@ def ddt(cls):
         if hasattr(func, DATA_ATTR):
             for i, v in enumerate(getattr(func, DATA_ATTR)):
                 test_name = mk_test_name(name, getattr(v, "__name__", v), i)
-                test_docstring = _get_test_docstring(func, v)
+                test_data_docstring = _get_test_data_docstring(func, v)
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(cls, test_name, test_docstring, func, *v)
+                        add_test(cls, test_name, test_data_docstring, func, *v)
                     else:
                         # unpack dictionary
-                        add_test(cls, test_name, test_docstring, func, **v)
+                        add_test(cls, test_name, test_data_docstring, func, **v)
                 else:
-                    add_test(cls, test_name, test_docstring, func, v)
+                    add_test(cls, test_name, test_data_docstring, func, v)
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
