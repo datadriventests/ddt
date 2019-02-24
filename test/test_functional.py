@@ -242,12 +242,15 @@ def test_ddt_data_doc_attribute():
     Test the ``__doc__`` attribute handling of ``data`` items with ``ddt``
     """
 
-    def hello():
+    def func_w_doc():
         """testFunctionDocstring {6}
 
         :param: None
         :return: None
         """
+        pass
+
+    def func_wo_doc():
         pass
 
     class Myint(int):
@@ -263,18 +266,40 @@ def test_ddt_data_doc_attribute():
     d2 = Myint(2)
     d2.__name__ = 'case2'
 
-    data_hello = data(d1, d2)(hello)
-    setattr(Mytest, 'test_hello', data_hello)
+    data_hello = data(d1, d2, {'test': True})(func_w_doc)
+    data_hello2 = data(d1, d2, {'test': True})(func_wo_doc)
+
+    setattr(Mytest, 'first_test', data_hello)
+    setattr(Mytest, 'second_test', data_hello2)
     ddt_mytest = ddt(Mytest)
 
     assert_equal(
         getattr(
-            getattr(ddt_mytest, 'test_hello_1_case1'), '__doc__'), d1.__doc__
+            getattr(ddt_mytest, 'first_test_1_case1'), '__doc__'), d1.__doc__
     )
     assert_equal(
         getattr(
-            getattr(ddt_mytest, 'test_hello_2_case2'), '__doc__'),
-        hello.__doc__
+            getattr(ddt_mytest, 'first_test_2_case2'), '__doc__'),
+        func_w_doc.__doc__
+    )
+    assert_equal(
+        getattr(
+            getattr(ddt_mytest, 'first_test_3'), '__doc__'),
+        func_w_doc.__doc__
+    )
+    assert_equal(
+        getattr(
+            getattr(ddt_mytest, 'second_test_1_case1'), '__doc__'), d1.__doc__
+    )
+    assert_equal(
+        getattr(
+            getattr(ddt_mytest, 'second_test_2_case2'), '__doc__'),
+        None
+    )
+    assert_equal(
+        getattr(
+            getattr(ddt_mytest, 'second_test_3'), '__doc__'),
+        None
     )
 
 
@@ -282,10 +307,6 @@ def test_ddt_data_unicode():
     """
     Test that unicode strings are converted to function names correctly
     """
-
-    def hello():
-        pass
-
     # We test unicode support separately for python 2 and 3
 
     if six.PY2:

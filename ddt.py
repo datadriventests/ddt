@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
 else:
     _have_yaml = True
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
@@ -135,7 +135,7 @@ def mk_test_name(name, value, index=0):
     return re.sub(r'\W|^(?=\d)', '_', test_name)
 
 
-def feed_data(func, new_name, test_docstring, *args, **kwargs):
+def feed_data(func, new_name, test_data_docstring, *args, **kwargs):
     """
     This internal method decorator feeds the test data item to the test.
 
@@ -146,8 +146,8 @@ def feed_data(func, new_name, test_docstring, *args, **kwargs):
     wrapper.__name__ = new_name
     wrapper.__wrapped__ = func
     # set docstring if exists
-    if test_docstring is not None:
-        wrapper.__doc__ = test_docstring
+    if test_data_docstring is not None:
+        wrapper.__doc__ = test_data_docstring
     else:
         # Try to call format on the docstring
         if func.__doc__:
@@ -177,7 +177,6 @@ def add_test(cls, test_name, test_docstring, func, *args, **kwargs):
 def process_file_data(cls, name, func, file_attr):
     """
     Process the parameter in the `file_data` decorator.
-
     """
     cls_path = os.path.abspath(inspect.getsourcefile(cls))
     data_file_path = os.path.join(os.path.dirname(cls_path), file_attr)
@@ -223,7 +222,6 @@ def process_file_data(cls, name, func, file_attr):
 def _add_tests_from_data(cls, name, func, data):
     """
     Add tests from data loaded from the data file into the class
-
     """
     for i, elem in enumerate(data):
         if isinstance(data, dict):
@@ -236,6 +234,23 @@ def _add_tests_from_data(cls, name, func, data):
             add_test(cls, test_name, test_name, func, **value)
         else:
             add_test(cls, test_name, test_name, func, value)
+
+
+def _is_primitive(obj):
+    """Finds out if the obj is a "primitive". It is somewhat hacky but it works.
+    """
+    return not hasattr(obj, '__dict__')
+
+
+def _get_test_data_docstring(func, value):
+    """Returns a docstring based on the following resolution strategy:
+    1. Passed value is not a "primitive" and has a docstring, then use it.
+    2. In all other cases return None, i.e the test name is used.
+    """
+    if not _is_primitive(value) and value.__doc__:
+        return value.__doc__
+    else:
+        return None
 
 
 def ddt(cls):
@@ -266,15 +281,27 @@ def ddt(cls):
         if hasattr(func, DATA_ATTR):
             for i, v in enumerate(getattr(func, DATA_ATTR)):
                 test_name = mk_test_name(name, getattr(v, "__name__", v), i)
-                test_docstring = getattr(v, "__doc__", None)
+                test_data_docstring = _get_test_data_docstring(func, v)
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(cls, test_name, test_docstring, func, *v)
+                        add_test(
+                            cls,
+                            test_name,
+                            test_data_docstring,
+                            func,
+                            *v
+                        )
                     else:
                         # unpack dictionary
-                        add_test(cls, test_name, test_docstring, func, **v)
+                        add_test(
+                            cls,
+                            test_name,
+                            test_data_docstring,
+                            func,
+                            **v
+                        )
                 else:
-                    add_test(cls, test_name, test_docstring, func, v)
+                    add_test(cls, test_name, test_data_docstring, func, v)
             delattr(cls, name)
         elif hasattr(func, FILE_ATTR):
             file_attr = getattr(func, FILE_ATTR)
