@@ -243,7 +243,7 @@ def _is_primitive(obj):
 
 
 def _get_test_data_docstring(func, value):
-    """Returns a docstring from test data based on the following resolution strategy:
+    """Returns a docstring based on the following resolution strategy:
     1. Passed value is not a "primitive" and has a docstring, then use it.
     2. In all other cases return None, i.e the test name is used.
     """
@@ -284,10 +284,22 @@ def ddt(cls):
                 test_data_docstring = _get_test_data_docstring(func, v)
                 if hasattr(func, UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(cls, test_name, test_data_docstring, func, *v)
+                        add_test(
+                            cls,
+                            test_name,
+                            test_data_docstring,
+                            func,
+                            *v
+                        )
                     else:
                         # unpack dictionary
-                        add_test(cls, test_name, test_data_docstring, func, **v)
+                        add_test(
+                            cls,
+                            test_name,
+                            test_data_docstring,
+                            func,
+                            **v
+                        )
                 else:
                     add_test(cls, test_name, test_data_docstring, func, v)
             delattr(cls, name)
