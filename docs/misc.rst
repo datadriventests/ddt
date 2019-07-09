@@ -22,4 +22,4 @@ If one of the passed data objects has a docstring, the resulting testcase borrow
 
 
 The first of the resulting test cases will have ``"""This is a new docstring"""`` as its docstring and the second will
-keep its onw one (``"""This is an old docstring"""``).
+keep its old one (``"""This is an old docstring"""``).
