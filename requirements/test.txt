@@ -4,4 +4,4 @@ flake8
 nose
 six>=1.4.0
 PyYAML
-mock
+mock; python_version < '3.3'
