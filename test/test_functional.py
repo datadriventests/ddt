@@ -2,7 +2,10 @@ import os
 import json
 
 import six
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from ddt import ddt, data, file_data
 from nose.tools import (
