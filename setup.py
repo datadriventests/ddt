@@ -11,7 +11,7 @@ setup(
     version=__version__,
     author='Carles Barrobés',
     author_email='carles@barrobes.com',
-    url='https://github.com/txels/ddt',
+    url='https://github.com/datadriventests/ddt',
     py_modules=['ddt'],
     classifiers=[
         'Development Status :: 4 - Beta',

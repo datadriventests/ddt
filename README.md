@@ -1,6 +1,5 @@
-[![Build Status](https://travis-ci.org/txels/ddt.svg)](https://travis-ci.org/txels/ddt)
-[![Code Health](https://landscape.io/github/txels/ddt/master/landscape.svg)](https://landscape.io/github/txels/ddt/master)
-[![codecov.io](https://codecov.io/github/txels/ddt/coverage.svg?branch=master)](https://codecov.io/github/txels/ddt)
+[![Build Status](https://travis-ci.org/datadriventests/ddt.svg)](https://travis-ci.org/datadriventests/ddt)
+[![codecov.io](https://codecov.io/github/datadriventests/ddt/coverage.svg?branch=master)](https://codecov.io/github/datadriventests/ddt)
 <br />
 [![Version](https://img.shields.io/pypi/v/ddt.svg)](https://pypi.python.org/pypi/ddt)
 [![Downloads](https://img.shields.io/pypi/dm/ddt.svg)](https://pypi.python.org/pypi/ddt)
