@@ -91,10 +91,6 @@ def file_data(value, yaml_loader=None):
     should contain JSON encoded data, that can either be a list or a
     dict.
 
-    ``yaml_loader`` can be used to customize yaml deserialization.
-    The default is ``None``, which results in using the ``yaml.safe_load``
-    method.
-
     In case of a list, each value in the list will correspond to one
     test case, and the value will be concatenated to the test method
     name.
@@ -102,6 +98,9 @@ def file_data(value, yaml_loader=None):
     In case of a dict, keys will be used as suffixes to the name of the
     test case, and values will be fed as test data.
 
+    ``yaml_loader`` can be used to customize yaml deserialization.
+    The default is ``None``, which results in using the ``yaml.safe_load``
+    method.
     """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
