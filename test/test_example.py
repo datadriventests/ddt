@@ -1,4 +1,5 @@
 import unittest
+
 from ddt import ddt, data, file_data, unpack
 from test.mycode import larger_than_two, has_three_elements, is_a_greeting
 
@@ -8,7 +9,6 @@ except ImportError:  # pragma: no cover
     have_yaml_support = False
 else:
     have_yaml_support = True
-    del yaml
 
 # A good-looking decorator
 needs_yaml = unittest.skipUnless(
@@ -18,6 +18,19 @@ needs_yaml = unittest.skipUnless(
 
 class Mylist(list):
     pass
+
+
+class MyClass:
+    def __init__(self, **kwargs):
+        for field, value in kwargs.items():
+            setattr(self, field, value)
+
+    def __eq__(self, other):
+        return isinstance(other, dict) and vars(self) == other or \
+               isinstance(other, MyClass) and vars(self) == vars(other)
+
+    def __str__(self):
+        return "TestObject %s" % vars(self)
 
 
 def annotated(a, b):
@@ -130,3 +143,11 @@ class FooTestCase(unittest.TestCase):
     def test_list_extracted_with_doc(self, first_value, second_value):
         """Extract into args with first value {} and second value {}"""
         self.assertTrue(first_value > second_value)
+
+
+if have_yaml_support:
+    class YamlOnlyTestCase(unittest.TestCase):
+        @file_data('test_custom_yaml_loader.yaml', yaml.FullLoader)
+        def test_custom_yaml_loader(self, instance, expected):
+            """Test with yaml tags to create specific classes to compare"""
+            self.assertEqual(expected, instance)

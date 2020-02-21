@@ -25,10 +25,11 @@ __version__ = '1.2.1'
 # They are added to the decorated test method and processed later
 # by the `ddt` class decorator.
 
-DATA_ATTR = '%values'      # store the data the test must run with
-FILE_ATTR = '%file_path'   # store the path to JSON file
-UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
-index_len = 5              # default max length of case index
+DATA_ATTR = '%values'              # store the data the test must run with
+FILE_ATTR = '%file_path'           # store the path to JSON file
+YAML_LOADER_ATTR = '%yaml_loader'  # store custom yaml loader for serialization
+UNPACK_ATTR = '%unpack'            # remember that we have to unpack values
+index_len = 5                      # default max length of case index
 
 
 try:
@@ -79,7 +80,7 @@ def idata(iterable):
     return wrapper
 
 
-def file_data(value):
+def file_data(value, yaml_loader=None):
     """
     Method decorator to add to your test methods.
 
@@ -89,6 +90,10 @@ def file_data(value):
     containing the decorated ``unittest.TestCase``. The file
     should contain JSON encoded data, that can either be a list or a
     dict.
+
+    ``yaml_loader`` can be used to customize yaml deserialization.
+    The default is ``None``, which results in using the ``yaml.safe_load``
+    method.
 
     In case of a list, each value in the list will correspond to one
     test case, and the value will be concatenated to the test method
@@ -100,6 +105,8 @@ def file_data(value):
     """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
+        if yaml_loader is not None:
+            setattr(func, YAML_LOADER_ATTR, yaml_loader)
         return func
     return wrapper
 
@@ -212,7 +219,11 @@ def process_file_data(cls, name, func, file_attr):
     with codecs.open(data_file_path, 'r', 'utf-8') as f:
         # Load the data from YAML or JSON
         if _is_yaml_file:
-            data = yaml.safe_load(f)
+            if hasattr(func, YAML_LOADER_ATTR):
+                yaml_loader = getattr(func, YAML_LOADER_ATTR)
+                data = yaml.load(f, Loader=yaml_loader)
+            else:
+                data = yaml.safe_load(f)
         else:
             data = json.load(f)
 

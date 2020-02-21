@@ -1,7 +1,9 @@
 import os
 import json
+from sys import modules
 
 import six
+
 try:
     from unittest import mock
 except ImportError:
@@ -13,6 +15,10 @@ from nose.tools import (
 )
 
 from test.mycode import has_three_elements
+
+
+class CustomClass:
+    pass
 
 
 @ddt
@@ -386,3 +392,42 @@ def test_load_yaml_without_yaml_support():
     for test in tests:
         method = getattr(obj, test)
         assert_raises(ValueError, method)
+
+
+def test_load_yaml_with_python_tag():
+    """
+    Test that YAML files containing python tags throw no exception if an
+    loader allowing python tags is passed.
+    """
+
+    from yaml import FullLoader
+    from yaml.constructor import ConstructorError
+
+    def str_to_type(class_name):
+        return getattr(modules[__name__], class_name)
+
+    try:
+        @ddt
+        class YamlDefaultLoaderTest(object):
+            @file_data('test_functional_custom_tags.yaml')
+            def test_cls_is_instance(self, cls, expected):
+                assert_true(isinstance(cls, str_to_type(expected)))
+    except Exception as e:
+        if not isinstance(e, ConstructorError):
+            raise AssertionError()
+
+    @ddt
+    class YamlFullLoaderTest(object):
+        @file_data('test_functional_custom_tags.yaml', FullLoader)
+        def test_cls_is_instance(self, instance, expected):
+            assert_true(isinstance(instance, str_to_type(expected)))
+
+    tests = list(filter(_is_test, YamlFullLoaderTest.__dict__))
+    obj = YamlFullLoaderTest()
+
+    if not tests:
+        raise AssertionError('No tests have been found.')
+
+    for test in tests:
+        method = getattr(obj, test)
+        method()
