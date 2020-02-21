@@ -146,6 +146,10 @@ class FooTestCase(unittest.TestCase):
 
 
 if have_yaml_support:
+    # This test will only succeed if the execution context is from the ddt
+    # directory. pyyaml cannot locate test.test_example.MyClass otherwise!
+
+    @ddt
     class YamlOnlyTestCase(unittest.TestCase):
         @file_data('test_custom_yaml_loader.yaml', yaml.FullLoader)
         def test_custom_yaml_loader(self, instance, expected):

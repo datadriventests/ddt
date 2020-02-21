@@ -52,8 +52,6 @@ my_class:
       _a: 1
       _b: test
 
-
-
 python_str:
   instance: !!python/str "test"
   expected: test
