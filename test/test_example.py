@@ -72,34 +72,34 @@ class FooTestCase(unittest.TestCase):
         self.assertIsNotNone(getattr(value, "__name__"))
         self.assertIsNotNone(getattr(value, "__doc__"))
 
-    @file_data("test_data_dict_dict.json")
+    @file_data('data/test_data_dict_dict.json')
     def test_file_data_json_dict_dict(self, start, end, value):
         self.assertLess(start, end)
         self.assertLess(value, end)
         self.assertGreater(value, start)
 
-    @file_data('test_data_dict.json')
+    @file_data('data/test_data_dict.json')
     def test_file_data_json_dict(self, value):
         self.assertTrue(has_three_elements(value))
 
-    @file_data('test_data_list.json')
+    @file_data('data/test_data_list.json')
     def test_file_data_json_list(self, value):
         self.assertTrue(is_a_greeting(value))
 
     @needs_yaml
-    @file_data("test_data_dict_dict.yaml")
+    @file_data('data/test_data_dict_dict.yaml')
     def test_file_data_yaml_dict_dict(self, start, end, value):
         self.assertLess(start, end)
         self.assertLess(value, end)
         self.assertGreater(value, start)
 
     @needs_yaml
-    @file_data('test_data_dict.yaml')
+    @file_data('data/test_data_dict.yaml')
     def test_file_data_yaml_dict(self, value):
         self.assertTrue(has_three_elements(value))
 
     @needs_yaml
-    @file_data('test_data_list.yaml')
+    @file_data('data/test_data_list.yaml')
     def test_file_data_yaml_list(self, value):
         self.assertTrue(is_a_greeting(value))
 
@@ -151,7 +151,7 @@ if have_yaml_support:
 
     @ddt
     class YamlOnlyTestCase(unittest.TestCase):
-        @file_data('test_custom_yaml_loader.yaml', yaml.FullLoader)
+        @file_data('data/test_custom_yaml_loader.yaml', yaml.FullLoader)
         def test_custom_yaml_loader(self, instance, expected):
             """Test with yaml tags to create specific classes to compare"""
             self.assertEqual(expected, instance)

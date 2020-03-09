@@ -104,7 +104,7 @@ def file_data(value, yaml_loader=None):
     """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
-        if yaml_loader is not None:
+        if yaml_loader:
             setattr(func, YAML_LOADER_ATTR, yaml_loader)
         return func
     return wrapper
