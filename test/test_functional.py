@@ -1,7 +1,9 @@
 import os
 import json
+from sys import modules
 
 import six
+
 try:
     from unittest import mock
 except ImportError:
@@ -13,6 +15,10 @@ from nose.tools import (
 )
 
 from test.mycode import has_three_elements
+
+
+class CustomClass:
+    pass
 
 
 @ddt
@@ -44,7 +50,7 @@ class FileDataDummy(object):
     Dummy class to test the file_data decorator on
     """
 
-    @file_data("test_data_dict.json")
+    @file_data("data/test_data_dict.json")
     def test_something_again(self, value):
         return value
 
@@ -56,7 +62,7 @@ class JSONFileDataMissingDummy(object):
     JSON file is missing
     """
 
-    @file_data("test_data_dict_missing.json")
+    @file_data("data/test_data_dict_missing.json")
     def test_something_again(self, value):
         return value
 
@@ -68,7 +74,7 @@ class YAMLFileDataMissingDummy(object):
     YAML file is missing
     """
 
-    @file_data("test_data_dict_missing.yaml")
+    @file_data("data/test_data_dict_missing.yaml")
     def test_something_again(self, value):
         return value
 
@@ -148,7 +154,7 @@ def test_file_data_test_names_dict():
     tests = set(filter(_is_test, FileDataDummy.__dict__))
 
     tests_dir = os.path.dirname(__file__)
-    test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
+    test_data_path = os.path.join(tests_dir, 'data/test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
     index_len = len(str(len(test_data)))
     created_tests = set([
@@ -376,7 +382,7 @@ def test_load_yaml_without_yaml_support():
     @ddt
     class NoYAMLInstalledTest(object):
 
-        @file_data('test_data_dict.yaml')
+        @file_data('data/test_data_dict.yaml')
         def test_file_data_yaml_dict(self, value):
             assert_true(has_three_elements(value))
 
@@ -386,3 +392,42 @@ def test_load_yaml_without_yaml_support():
     for test in tests:
         method = getattr(obj, test)
         assert_raises(ValueError, method)
+
+
+def test_load_yaml_with_python_tag():
+    """
+    Test that YAML files containing python tags throw no exception if an
+    loader allowing python tags is passed.
+    """
+
+    from yaml import FullLoader
+    from yaml.constructor import ConstructorError
+
+    def str_to_type(class_name):
+        return getattr(modules[__name__], class_name)
+
+    try:
+        @ddt
+        class YamlDefaultLoaderTest(object):
+            @file_data('data/test_functional_custom_tags.yaml')
+            def test_cls_is_instance(self, cls, expected):
+                assert_true(isinstance(cls, str_to_type(expected)))
+    except Exception as e:
+        if not isinstance(e, ConstructorError):
+            raise AssertionError()
+
+    @ddt
+    class YamlFullLoaderTest(object):
+        @file_data('data/test_functional_custom_tags.yaml', FullLoader)
+        def test_cls_is_instance(self, instance, expected):
+            assert_true(isinstance(instance, str_to_type(expected)))
+
+    tests = list(filter(_is_test, YamlFullLoaderTest.__dict__))
+    obj = YamlFullLoaderTest()
+
+    if not tests:
+        raise AssertionError('No tests have been found.')
+
+    for test in tests:
+        method = getattr(obj, test)
+        method()
