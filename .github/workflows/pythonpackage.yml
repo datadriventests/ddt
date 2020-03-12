@@ -13,6 +13,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       matrix:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
@@ -36,5 +37,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with nosetests
       run: |
-        pip install python-nose
+        pip install nose-parameterized
         nosetests
