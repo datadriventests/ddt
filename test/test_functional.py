@@ -11,7 +11,7 @@ except ImportError:
 
 from ddt import ddt, data, file_data
 from nose.tools import (
-    assert_true, assert_equal, assert_is_not_none, assert_raises
+    assert_true, assert_equal, assert_false, assert_is_not_none, assert_raises
 )
 
 from test.mycode import has_three_elements
@@ -32,11 +32,23 @@ class Dummy(object):
         return value
 
 
+@ddt(indexOnly=True)
+class DummyIndexOnlyTestNames(object):
+    """
+    Dummy class to test the ddt decorator that generates test names using only
+    the index.
+    """
+
+    @data("a", "b", "c", "d")
+    def test_something(self, value):
+        return value
+
+
 @ddt
 class DummyInvalidIdentifier():
     """
     Dummy class to test the data decorator receiving values invalid characters
-    indentifiers
+    identifiers
     """
 
     @data('32v2 g #Gmw845h$W b53wi.')
@@ -132,6 +144,20 @@ def test_ddt():
     """
     tests = len(list(filter(_is_test, Dummy.__dict__)))
     assert_equal(tests, 4)
+
+
+def test_ddt_index_only_true():
+    """
+    Test the ``ddt`` class decorator with kwargs ``indexOnly=True``
+    """
+    tests = set(filter(_is_test, DummyIndexOnlyTestNames.__dict__))
+    assert_equal(len(tests), 4)
+
+    indexes = range(1, 5)
+    dataSets = ["a", "b", "c", "d"]  # @data inside DummyIndexOnlyTestNames
+    for i, d in zip(indexes, dataSets):
+        assert_true("test_something_{}".format(i) in tests)
+        assert_false("test_something_{}_{}".format(i, d) in tests)
 
 
 def test_file_data_test_creation():

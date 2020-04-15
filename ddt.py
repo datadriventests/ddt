@@ -110,7 +110,7 @@ def file_data(value, yaml_loader=None):
     return wrapper
 
 
-def mk_test_name(name, value, index=0):
+def mk_test_name(name, value, index=0, index_only=False):
     """
     Generate a new name for a test case.
 
@@ -126,11 +126,14 @@ def mk_test_name(name, value, index=0):
 
     A "trivial" value is a plain scalar, or a tuple or list consisting
     only of trivial values.
+
+    If index_only is True, it will append only the index to the original test
+    name.
     """
 
     # Add zeros before index to keep order
     index = "{0:0{1}}".format(index + 1, index_len)
-    if not is_trivial(value):
+    if index_only or not is_trivial(value):
         return "{0}_{1}".format(name, index)
     try:
         value = str(value)
@@ -263,7 +266,7 @@ def _get_test_data_docstring(func, value):
         return None
 
 
-def ddt(cls):
+def ddt(arg=None, **kwargs):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
 
@@ -287,34 +290,46 @@ def ddt(cls):
     from the ``data`` key.
 
     """
-    for name, func in list(cls.__dict__.items()):
-        if hasattr(func, DATA_ATTR):
-            for i, v in enumerate(getattr(func, DATA_ATTR)):
-                test_name = mk_test_name(name, getattr(v, "__name__", v), i)
-                test_data_docstring = _get_test_data_docstring(func, v)
-                if hasattr(func, UNPACK_ATTR):
-                    if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(
-                            cls,
-                            test_name,
-                            test_data_docstring,
-                            func,
-                            *v
-                        )
+    index_only = kwargs.get("indexOnly", False)
+
+    def wrapper(cls):
+        for name, func in list(cls.__dict__.items()):
+            if hasattr(func, DATA_ATTR):
+                for i, v in enumerate(getattr(func, DATA_ATTR)):
+                    test_name = mk_test_name(
+                        name,
+                        getattr(v, "__name__", v),
+                        i,
+                        index_only
+                    )
+                    test_data_docstring = _get_test_data_docstring(func, v)
+                    if hasattr(func, UNPACK_ATTR):
+                        if isinstance(v, tuple) or isinstance(v, list):
+                            add_test(
+                                cls,
+                                test_name,
+                                test_data_docstring,
+                                func,
+                                *v
+                            )
+                        else:
+                            # unpack dictionary
+                            add_test(
+                                cls,
+                                test_name,
+                                test_data_docstring,
+                                func,
+                                **v
+                            )
                     else:
-                        # unpack dictionary
-                        add_test(
-                            cls,
-                            test_name,
-                            test_data_docstring,
-                            func,
-                            **v
-                        )
-                else:
-                    add_test(cls, test_name, test_data_docstring, func, v)
-            delattr(cls, name)
-        elif hasattr(func, FILE_ATTR):
-            file_attr = getattr(func, FILE_ATTR)
-            process_file_data(cls, name, func, file_attr)
-            delattr(cls, name)
-    return cls
+                        add_test(cls, test_name, test_data_docstring, func, v)
+                delattr(cls, name)
+            elif hasattr(func, FILE_ATTR):
+                file_attr = getattr(func, FILE_ATTR)
+                process_file_data(cls, name, func, file_attr)
+                delattr(cls, name)
+        return cls
+
+    # ``arg`` is the unittest's test class when decorating with ``@ddt`` while
+    # it is ``None`` when decorating a test class with ``@ddt(k=v)``.
+    return wrapper(arg) if inspect.isclass(arg) else wrapper
