@@ -10,7 +10,11 @@ import json
 import os
 import re
 import codecs
+from enum import (
+    Enum, unique
+)
 from functools import wraps
+
 
 try:
     import yaml
@@ -36,6 +40,29 @@ try:
     trivial_types = (type(None), bool, int, float, basestring)
 except NameError:
     trivial_types = (type(None), bool, int, float, str)
+
+
+@unique
+class FormatTestName(Enum):
+    """
+    An enum to configure how mk_test_name() to compose a test name.  Given the
+    following example:
+
+    @data("a", "b")
+    def testSomething(self, value):
+        ...
+
+    if using just ``@ddt`` or together with ``DEFAULT``:
+        testSomething_1_a
+        testSomething_2_b
+
+    if using ``INDEX_ONLY``:
+        testSomething_1
+        testSomething_2
+
+    """
+    DEFAULT = 0
+    INDEX_ONLY = 1
 
 
 def is_trivial(value):
@@ -110,7 +137,7 @@ def file_data(value, yaml_loader=None):
     return wrapper
 
 
-def mk_test_name(name, value, index=0, index_only=False):
+def mk_test_name(name, value, index=0, fmt_test_name=FormatTestName.DEFAULT):
     """
     Generate a new name for a test case.
 
@@ -127,13 +154,13 @@ def mk_test_name(name, value, index=0, index_only=False):
     A "trivial" value is a plain scalar, or a tuple or list consisting
     only of trivial values.
 
-    If index_only is True, it will append only the index to the original test
-    name.
+    The test name format is controlled by enum ``FormatTestName`` as well. See
+    the enum documentation for further details.
     """
 
     # Add zeros before index to keep order
     index = "{0:0{1}}".format(index + 1, index_len)
-    if index_only or not is_trivial(value):
+    if fmt_test_name is FormatTestName.INDEX_ONLY or not is_trivial(value):
         return "{0}_{1}".format(name, index)
     try:
         value = str(value)
@@ -289,8 +316,17 @@ def ddt(arg=None, **kwargs):
     for each ``test_name`` key create as many methods in the list of values
     from the ``data`` key.
 
+    Decorating with the keyword argument ``formatTestName`` can control the
+    format of the generated test names.  For example:
+
+    - ``@ddt(formatTestName=FormatTestName.DEFAULT)`` will be index and values.
+
+    - ``@ddt(formatTestName=FormatTestName.INDEX_ONLY)`` will be index only.
+
+    - ``@ddt`` is the same as DEFAULT.
+
     """
-    index_only = kwargs.get("indexOnly", False)
+    fmt_test_name = kwargs.get("formatTestName", FormatTestName.DEFAULT)
 
     def wrapper(cls):
         for name, func in list(cls.__dict__.items()):
@@ -300,7 +336,7 @@ def ddt(arg=None, **kwargs):
                         name,
                         getattr(v, "__name__", v),
                         i,
-                        index_only
+                        fmt_test_name
                     )
                     test_data_docstring = _get_test_data_docstring(func, v)
                     if hasattr(func, UNPACK_ATTR):

@@ -9,7 +9,7 @@ try:
 except ImportError:
     import mock
 
-from ddt import ddt, data, file_data
+from ddt import ddt, data, file_data, FormatTestName
 from nose.tools import (
     assert_true, assert_equal, assert_false, assert_is_not_none, assert_raises
 )
@@ -32,8 +32,20 @@ class Dummy(object):
         return value
 
 
-@ddt(indexOnly=True)
-class DummyIndexOnlyTestNames(object):
+@ddt(formatTestName=FormatTestName.DEFAULT)
+class DummyFormatTestNameDefault(object):
+    """
+    Dummy class to test the ddt decorator that generates test names using the
+    default format (index and values).
+    """
+
+    @data("a", "b", "c", "d")
+    def test_something(self, value):
+        return value
+
+
+@ddt(formatTestName=FormatTestName.INDEX_ONLY)
+class DummyFormatTestNameIndexOnly(object):
     """
     Dummy class to test the ddt decorator that generates test names using only
     the index.
@@ -146,18 +158,32 @@ def test_ddt():
     assert_equal(tests, 4)
 
 
-def test_ddt_index_only_true():
+def test_ddt_format_test_name_index_only():
     """
-    Test the ``ddt`` class decorator with kwargs ``indexOnly=True``
+    Test the ``ddt`` class decorator with ``INDEX_ONLY`` test name format
     """
-    tests = set(filter(_is_test, DummyIndexOnlyTestNames.__dict__))
+    tests = set(filter(_is_test, DummyFormatTestNameIndexOnly.__dict__))
     assert_equal(len(tests), 4)
 
     indexes = range(1, 5)
-    dataSets = ["a", "b", "c", "d"]  # @data inside DummyIndexOnlyTestNames
+    dataSets = ["a", "b", "c", "d"]  # @data from DummyFormatTestNameIndexOnly
     for i, d in zip(indexes, dataSets):
         assert_true("test_something_{}".format(i) in tests)
         assert_false("test_something_{}_{}".format(i, d) in tests)
+
+
+def test_ddt_format_test_name_default():
+    """
+    Test the ``ddt`` class decorator with ``DEFAULT`` test name format
+    """
+    tests = set(filter(_is_test, DummyFormatTestNameDefault.__dict__))
+    assert_equal(len(tests), 4)
+
+    indexes = range(1, 5)
+    dataSets = ["a", "b", "c", "d"]  # @data from DummyFormatTestNameDefault
+    for i, d in zip(indexes, dataSets):
+        assert_false("test_something_{}".format(i) in tests)
+        assert_true("test_something_{}_{}".format(i, d) in tests)
 
 
 def test_file_data_test_creation():
