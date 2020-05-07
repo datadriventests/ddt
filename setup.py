@@ -13,6 +13,7 @@ setup(
     author_email='carles@barrobes.com',
     url='https://github.com/datadriventests/ddt',
     py_modules=['ddt'],
+    install_requires=['nose'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
