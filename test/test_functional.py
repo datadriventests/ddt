@@ -9,9 +9,9 @@ try:
 except ImportError:
     import mock
 
-from ddt import ddt, data, file_data
+from ddt import ddt, data, file_data, TestNameFormat
 from nose.tools import (
-    assert_true, assert_equal, assert_is_not_none, assert_raises
+    assert_true, assert_equal, assert_false, assert_is_not_none, assert_raises
 )
 
 from test.mycode import has_three_elements
@@ -32,11 +32,35 @@ class Dummy(object):
         return value
 
 
+@ddt(testNameFormat=TestNameFormat.DEFAULT)
+class DummyTestNameFormatDefault(object):
+    """
+    Dummy class to test the ddt decorator that generates test names using the
+    default format (index and values).
+    """
+
+    @data("a", "b", "c", "d")
+    def test_something(self, value):
+        return value
+
+
+@ddt(testNameFormat=TestNameFormat.INDEX_ONLY)
+class DummyTestNameFormatIndexOnly(object):
+    """
+    Dummy class to test the ddt decorator that generates test names using only
+    the index.
+    """
+
+    @data("a", "b", "c", "d")
+    def test_something(self, value):
+        return value
+
+
 @ddt
 class DummyInvalidIdentifier():
     """
     Dummy class to test the data decorator receiving values invalid characters
-    indentifiers
+    identifiers
     """
 
     @data('32v2 g #Gmw845h$W b53wi.')
@@ -132,6 +156,34 @@ def test_ddt():
     """
     tests = len(list(filter(_is_test, Dummy.__dict__)))
     assert_equal(tests, 4)
+
+
+def test_ddt_format_test_name_index_only():
+    """
+    Test the ``ddt`` class decorator with ``INDEX_ONLY`` test name format
+    """
+    tests = set(filter(_is_test, DummyTestNameFormatIndexOnly.__dict__))
+    assert_equal(len(tests), 4)
+
+    indexes = range(1, 5)
+    dataSets = ["a", "b", "c", "d"]  # @data from DummyTestNameFormatIndexOnly
+    for i, d in zip(indexes, dataSets):
+        assert_true("test_something_{}".format(i) in tests)
+        assert_false("test_something_{}_{}".format(i, d) in tests)
+
+
+def test_ddt_format_test_name_default():
+    """
+    Test the ``ddt`` class decorator with ``DEFAULT`` test name format
+    """
+    tests = set(filter(_is_test, DummyTestNameFormatDefault.__dict__))
+    assert_equal(len(tests), 4)
+
+    indexes = range(1, 5)
+    dataSets = ["a", "b", "c", "d"]  # @data from DummyTestNameFormatDefault
+    for i, d in zip(indexes, dataSets):
+        assert_false("test_something_{}".format(i) in tests)
+        assert_true("test_something_{}_{}".format(i, d) in tests)
 
 
 def test_file_data_test_creation():
