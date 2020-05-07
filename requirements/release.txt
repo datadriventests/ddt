@@ -1,2 +1,4 @@
 wheel
+setuptools
+twine
 nose
