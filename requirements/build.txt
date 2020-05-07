@@ -1,4 +1,4 @@
 -r test.txt
-nose
+
 Sphinx
 sphinxcontrib-programoutput

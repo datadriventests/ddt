@@ -5,14 +5,16 @@
 # DDT is licensed under the MIT License, included in
 # https://github.com/datadriventests/ddt/blob/master/LICENSE.md
 
-import codecs
 import inspect
 import json
 import os
 import re
-from enum import Enum, unique
+import codecs
+from enum import (
+    Enum, unique
+)
 from functools import wraps
-from nose.tools import nottest
+
 
 try:
     import yaml
@@ -41,27 +43,22 @@ except NameError:
 
 
 @unique
-@nottest
-class TestNameFormat(Enum):
+class FormatTestName(Enum):
     """
-    An enum to configure how ``mk_test_name()`` to compose a test name.  Given
-    the following example:
+    An enum to configure how mk_test_name() to compose a test name.  Given the
+    following example:
 
-    .. code-block:: python
-
-        @data("a", "b")
-        def testSomething(self, value):
-            ...
+    @data("a", "b")
+    def testSomething(self, value):
+        ...
 
     if using just ``@ddt`` or together with ``DEFAULT``:
-
-    * ``testSomething_1_a``
-    * ``testSomething_2_b``
+        testSomething_1_a
+        testSomething_2_b
 
     if using ``INDEX_ONLY``:
-
-    * ``testSomething_1``
-    * ``testSomething_2``
+        testSomething_1
+        testSomething_2
 
     """
     DEFAULT = 0
@@ -140,7 +137,7 @@ def file_data(value, yaml_loader=None):
     return wrapper
 
 
-def mk_test_name(name, value, index=0, name_fmt=TestNameFormat.DEFAULT):
+def mk_test_name(name, value, index=0, fmt_test_name=FormatTestName.DEFAULT):
     """
     Generate a new name for a test case.
 
@@ -157,13 +154,13 @@ def mk_test_name(name, value, index=0, name_fmt=TestNameFormat.DEFAULT):
     A "trivial" value is a plain scalar, or a tuple or list consisting
     only of trivial values.
 
-    The test name format is controlled by enum ``TestNameFormat`` as well. See
+    The test name format is controlled by enum ``FormatTestName`` as well. See
     the enum documentation for further details.
     """
 
     # Add zeros before index to keep order
     index = "{0:0{1}}".format(index + 1, index_len)
-    if name_fmt is TestNameFormat.INDEX_ONLY or not is_trivial(value):
+    if fmt_test_name is FormatTestName.INDEX_ONLY or not is_trivial(value):
         return "{0}_{1}".format(name, index)
     try:
         value = str(value)
@@ -319,17 +316,17 @@ def ddt(arg=None, **kwargs):
     for each ``test_name`` key create as many methods in the list of values
     from the ``data`` key.
 
-    Decorating with the keyword argument ``testNameFormat`` can control the
+    Decorating with the keyword argument ``formatTestName`` can control the
     format of the generated test names.  For example:
 
-    - ``@ddt(testNameFormat=TestNameFormat.DEFAULT)`` will be index and values.
+    - ``@ddt(formatTestName=FormatTestName.DEFAULT)`` will be index and values.
 
-    - ``@ddt(testNameFormat=TestNameFormat.INDEX_ONLY)`` will be index only.
+    - ``@ddt(formatTestName=FormatTestName.INDEX_ONLY)`` will be index only.
 
     - ``@ddt`` is the same as DEFAULT.
 
     """
-    fmt_test_name = kwargs.get("testNameFormat", TestNameFormat.DEFAULT)
+    fmt_test_name = kwargs.get("formatTestName", FormatTestName.DEFAULT)
 
     def wrapper(cls):
         for name, func in list(cls.__dict__.items()):
