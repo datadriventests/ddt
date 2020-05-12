@@ -410,7 +410,7 @@ def test_load_yaml_without_yaml_support():
 
         @file_data('data/test_data_dict.yaml')
         def test_file_data_yaml_dict(self, value):
-            assert_true(has_three_elements(value))
+            assert has_three_elements(value)
 
     tests = filter(_is_test, NoYAMLInstalledTest.__dict__)
 
