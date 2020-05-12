@@ -26,40 +26,40 @@ This allows you to write your tests as:
 
 Where ``test_data_dict_dict.json``:
 
-.. literalinclude:: ../test/test_data_dict_dict.json
+.. literalinclude:: ../test/data/test_data_dict_dict.json
    :language: javascript
 
 and ``test_data_dict_dict.yaml``:
 
-.. literalinclude:: ../test/test_data_dict_dict.yaml
+.. literalinclude:: ../test/data/test_data_dict_dict.yaml
    :language: yaml
 
 and ``test_data_dict.json``:
 
-.. literalinclude:: ../test/test_data_dict.json
+.. literalinclude:: ../test/data/test_data_dict.json
    :language: javascript
 
 and ``test_data_dict.yaml``:
 
-.. literalinclude:: ../test/test_data_dict.yaml
+.. literalinclude:: ../test/data/test_data_dict.yaml
    :language: yaml
 
 and ``test_data_list.json``:
 
-.. literalinclude:: ../test/test_data_list.json
+.. literalinclude:: ../test/data/test_data_list.json
    :language: javascript
 
 and ``test_data_list.yaml``:
 
-.. literalinclude:: ../test/test_data_list.yaml
+.. literalinclude:: ../test/data/test_data_list.yaml
    :language: yaml
 
-And then run them with your favourite test runner, e.g. if you use nose::
+And then run them with your favourite test runner, e.g. if you use pytest::
 
-    $ nosetests -v test/test_example.py
+    $ pytest test/test_example.py
 
 ..
-   program-output:: nosetests -v ../test/test_example.py
+   program-output:: pytest ../test/test_example.py
 
 The number of test cases actually run and reported separately has been
 multiplied.

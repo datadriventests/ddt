@@ -1,4 +1,4 @@
 wheel
 setuptools
 twine
-nose
+pytest
