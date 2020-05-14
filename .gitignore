@@ -10,3 +10,4 @@ ddt.egg-info/
 .tox
 .ropeproject
 venv/
+htmlcov/

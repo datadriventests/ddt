@@ -1,5 +1,4 @@
 -r test.txt
-nose
 Sphinx
 sphinxcontrib-programoutput
 enum34; python_version < '3'
