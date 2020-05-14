@@ -12,7 +12,6 @@ import os
 import re
 from enum import Enum, unique
 from functools import wraps
-from nose.tools import nottest
 
 try:
     import yaml
@@ -41,7 +40,6 @@ except NameError:
 
 
 @unique
-@nottest
 class TestNameFormat(Enum):
     """
     An enum to configure how ``mk_test_name()`` to compose a test name.  Given

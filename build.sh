@@ -1,4 +1,4 @@
 #!/bin/bash
-nosetests --with-coverage --cover-html --cover-package=ddt
+pytest --cov=ddt --cov-report html
 flake8 ddt.py test || echo "Flake8 errors"
 (cd docs; make html)
