@@ -334,11 +334,21 @@ def test_ddt_data_doc_attribute():
     setattr(Mytest, 'second_test', data_hello2)
     ddt_mytest = ddt(Mytest)
 
-    assert getattr(getattr(ddt_mytest, 'first_test_1_case1'), '__doc__') == d1.__doc__
-    assert getattr(getattr(ddt_mytest, 'first_test_2_case2'), '__doc__') == func_w_doc.__doc__
-    assert getattr(getattr(ddt_mytest, 'first_test_3'), '__doc__') == func_w_doc.__doc__
-    assert getattr(getattr(ddt_mytest, 'second_test_1_case1'), '__doc__') == d1.__doc__
-    assert getattr(getattr(ddt_mytest, 'second_test_2_case2'), '__doc__') is None
+    assert getattr(
+        getattr(ddt_mytest, 'first_test_1_case1'), '__doc__'
+    ) == d1.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'first_test_2_case2'), '__doc__'
+    ) == func_w_doc.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'first_test_3'), '__doc__'
+    ) == func_w_doc.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'second_test_1_case1'), '__doc__'
+    ) == d1.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'second_test_2_case2'), '__doc__'
+    ) is None
     assert getattr(getattr(ddt_mytest, 'second_test_3'), '__doc__') is None
 
 
@@ -395,7 +405,10 @@ def test_feed_data_with_invalid_identifier():
 
     obj = DummyInvalidIdentifier()
     method = getattr(obj, tests[0])
-    assert method.__name__ == 'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
+    assert (
+        method.__name__ ==
+        'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
+    )
     assert method() == '32v2 g #Gmw845h$W b53wi.'
 
 
