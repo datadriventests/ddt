@@ -25,4 +25,6 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Topic :: Software Development :: Testing',
     ],
+    setup_requires=['enum34; python_version < "3"'],
+    install_requires=['enum34; python_version < "3"'],
 )
