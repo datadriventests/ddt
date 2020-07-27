@@ -3,6 +3,7 @@ coverage
 flake8
 pytest
 pytest-cov
+isort
 six>=1.4.0
 PyYAML
 mock; python_version < '3.3'

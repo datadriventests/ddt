@@ -1,7 +1,7 @@
 import unittest
+from test.mycode import has_three_elements, is_a_greeting, larger_than_two
 
-from ddt import ddt, data, file_data, unpack
-from test.mycode import larger_than_two, has_three_elements, is_a_greeting
+from ddt import data, ddt, file_data, unpack
 
 try:
     import yaml

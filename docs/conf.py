@@ -11,7 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import os
+import sys
 
 # Specific for readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -57,6 +58,7 @@ copyright = u'2012, Carles Barrobés'
 # built documents.
 
 from ddt import __version__
+
 # The short X.Y version.
 version = __version__
 # The full version, including alpha/beta/rc tags.
