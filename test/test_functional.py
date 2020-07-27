@@ -1,18 +1,21 @@
 import os
 import json
-
+from sys import modules
+import pytest
 import six
+
 try:
     from unittest import mock
 except ImportError:
     import mock
 
-from ddt import ddt, data, file_data
-from nose.tools import (
-    assert_true, assert_equal, assert_is_not_none, assert_raises
-)
+from ddt import ddt, data, file_data, TestNameFormat
 
 from test.mycode import has_three_elements
+
+
+class CustomClass:
+    pass
 
 
 @ddt
@@ -26,11 +29,35 @@ class Dummy(object):
         return value
 
 
+@ddt(testNameFormat=TestNameFormat.DEFAULT)
+class DummyTestNameFormatDefault(object):
+    """
+    Dummy class to test the ddt decorator that generates test names using the
+    default format (index and values).
+    """
+
+    @data("a", "b", "c", "d")
+    def test_something(self, value):
+        return value
+
+
+@ddt(testNameFormat=TestNameFormat.INDEX_ONLY)
+class DummyTestNameFormatIndexOnly(object):
+    """
+    Dummy class to test the ddt decorator that generates test names using only
+    the index.
+    """
+
+    @data("a", "b", "c", "d")
+    def test_something(self, value):
+        return value
+
+
 @ddt
 class DummyInvalidIdentifier():
     """
     Dummy class to test the data decorator receiving values invalid characters
-    indentifiers
+    identifiers
     """
 
     @data('32v2 g #Gmw845h$W b53wi.')
@@ -44,7 +71,7 @@ class FileDataDummy(object):
     Dummy class to test the file_data decorator on
     """
 
-    @file_data("test_data_dict.json")
+    @file_data("data/test_data_dict.json")
     def test_something_again(self, value):
         return value
 
@@ -56,7 +83,7 @@ class JSONFileDataMissingDummy(object):
     JSON file is missing
     """
 
-    @file_data("test_data_dict_missing.json")
+    @file_data("data/test_data_dict_missing.json")
     def test_something_again(self, value):
         return value
 
@@ -68,7 +95,7 @@ class YAMLFileDataMissingDummy(object):
     YAML file is missing
     """
 
-    @file_data("test_data_dict_missing.yaml")
+    @file_data("data/test_data_dict_missing.yaml")
     def test_something_again(self, value):
         return value
 
@@ -87,11 +114,11 @@ def test_data_decorator():
     dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
 
-    assert_equal(post_size, pre_size + 1)
+    assert post_size == pre_size + 1
     extra_attrs = dh_keys - keys
-    assert_equal(len(extra_attrs), 1)
+    assert len(extra_attrs) == 1
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), (1, 2))
+    assert getattr(data_hello, extra_attr) == (1, 2)
 
 
 def test_file_data_decorator_with_dict():
@@ -109,11 +136,12 @@ def test_file_data_decorator_with_dict():
     dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
 
-    assert_equal(post_size, pre_size + 1)
+    assert post_size == pre_size + 1
     extra_attrs = dh_keys - keys
-    assert_equal(len(extra_attrs), 1)
+
+    assert len(extra_attrs) == 1
     extra_attr = extra_attrs.pop()
-    assert_equal(getattr(data_hello, extra_attr), ("test_data_dict.json",))
+    assert getattr(data_hello, extra_attr) == ("test_data_dict.json",)
 
 
 def _is_test(x):
@@ -125,7 +153,35 @@ def test_ddt():
     Test the ``ddt`` class decorator
     """
     tests = len(list(filter(_is_test, Dummy.__dict__)))
-    assert_equal(tests, 4)
+    assert tests == 4
+
+
+def test_ddt_format_test_name_index_only():
+    """
+    Test the ``ddt`` class decorator with ``INDEX_ONLY`` test name format
+    """
+    tests = set(filter(_is_test, DummyTestNameFormatIndexOnly.__dict__))
+    assert len(tests) == 4
+
+    indexes = range(1, 5)
+    dataSets = ["a", "b", "c", "d"]  # @data from DummyTestNameFormatIndexOnly
+    for i, d in zip(indexes, dataSets):
+        assert ("test_something_{}".format(i) in tests)
+        assert not ("test_something_{}_{}".format(i, d) in tests)
+
+
+def test_ddt_format_test_name_default():
+    """
+    Test the ``ddt`` class decorator with ``DEFAULT`` test name format
+    """
+    tests = set(filter(_is_test, DummyTestNameFormatDefault.__dict__))
+    assert len(tests) == 4
+
+    indexes = range(1, 5)
+    dataSets = ["a", "b", "c", "d"]  # @data from DummyTestNameFormatDefault
+    for i, d in zip(indexes, dataSets):
+        assert not ("test_something_{}".format(i) in tests)
+        assert ("test_something_{}_{}".format(i, d) in tests)
 
 
 def test_file_data_test_creation():
@@ -134,7 +190,7 @@ def test_file_data_test_creation():
     """
 
     tests = len(list(filter(_is_test, FileDataDummy.__dict__)))
-    assert_equal(tests, 2)
+    assert tests == 2
 
 
 def test_file_data_test_names_dict():
@@ -148,7 +204,7 @@ def test_file_data_test_names_dict():
     tests = set(filter(_is_test, FileDataDummy.__dict__))
 
     tests_dir = os.path.dirname(__file__)
-    test_data_path = os.path.join(tests_dir, 'test_data_dict.json')
+    test_data_path = os.path.join(tests_dir, 'data/test_data_dict.json')
     test_data = json.loads(open(test_data_path).read())
     index_len = len(str(len(test_data)))
     created_tests = set([
@@ -156,7 +212,7 @@ def test_file_data_test_names_dict():
         for index, name in enumerate(test_data.keys())
     ])
 
-    assert_equal(tests, created_tests)
+    assert tests == created_tests
 
 
 def test_feed_data_data():
@@ -171,7 +227,7 @@ def test_feed_data_data():
         method = getattr(obj, test)
         values.append(method())
 
-    assert_equal(set(values), set([1, 2, 3, 4]))
+    assert set(values) == set([1, 2, 3, 4])
 
 
 def test_feed_data_file_data():
@@ -186,7 +242,7 @@ def test_feed_data_file_data():
         method = getattr(obj, test)
         values.extend(method())
 
-    assert_equal(set(values), set([10, 12, 15, 15, 12, 50]))
+    assert set(values) == set([10, 12, 15, 15, 12, 50])
 
 
 def test_feed_data_file_data_missing_json():
@@ -198,7 +254,8 @@ def test_feed_data_file_data_missing_json():
     obj = JSONFileDataMissingDummy()
     for test in tests:
         method = getattr(obj, test)
-        assert_raises(ValueError, method)
+        with pytest.raises(ValueError):
+            method()
 
 
 def test_feed_data_file_data_missing_yaml():
@@ -210,7 +267,8 @@ def test_feed_data_file_data_missing_yaml():
     obj = YAMLFileDataMissingDummy()
     for test in tests:
         method = getattr(obj, test)
-        assert_raises(ValueError, method)
+        with pytest.raises(ValueError):
+            method()
 
 
 def test_ddt_data_name_attribute():
@@ -236,8 +294,8 @@ def test_ddt_data_name_attribute():
     setattr(Mytest, 'test_hello', data_hello)
 
     ddt_mytest = ddt(Mytest)
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_1_data1'))
-    assert_is_not_none(getattr(ddt_mytest, 'test_hello_2_2'))
+    assert getattr(ddt_mytest, 'test_hello_1_data1')
+    assert getattr(ddt_mytest, 'test_hello_2_2')
 
 
 def test_ddt_data_doc_attribute():
@@ -276,34 +334,22 @@ def test_ddt_data_doc_attribute():
     setattr(Mytest, 'second_test', data_hello2)
     ddt_mytest = ddt(Mytest)
 
-    assert_equal(
-        getattr(
-            getattr(ddt_mytest, 'first_test_1_case1'), '__doc__'), d1.__doc__
-    )
-    assert_equal(
-        getattr(
-            getattr(ddt_mytest, 'first_test_2_case2'), '__doc__'),
-        func_w_doc.__doc__
-    )
-    assert_equal(
-        getattr(
-            getattr(ddt_mytest, 'first_test_3'), '__doc__'),
-        func_w_doc.__doc__
-    )
-    assert_equal(
-        getattr(
-            getattr(ddt_mytest, 'second_test_1_case1'), '__doc__'), d1.__doc__
-    )
-    assert_equal(
-        getattr(
-            getattr(ddt_mytest, 'second_test_2_case2'), '__doc__'),
-        None
-    )
-    assert_equal(
-        getattr(
-            getattr(ddt_mytest, 'second_test_3'), '__doc__'),
-        None
-    )
+    assert getattr(
+        getattr(ddt_mytest, 'first_test_1_case1'), '__doc__'
+    ) == d1.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'first_test_2_case2'), '__doc__'
+    ) == func_w_doc.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'first_test_3'), '__doc__'
+    ) == func_w_doc.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'second_test_1_case1'), '__doc__'
+    ) == d1.__doc__
+    assert getattr(
+        getattr(ddt_mytest, 'second_test_2_case2'), '__doc__'
+    ) is None
+    assert getattr(getattr(ddt_mytest, 'second_test_3'), '__doc__') is None
 
 
 def test_ddt_data_unicode():
@@ -320,9 +366,9 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__u2603'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+        assert getattr(Mytest, 'test_hello_1_ascii') is not None
+        assert getattr(Mytest, 'test_hello_2_non_ascii__u2603') is not None
+        assert getattr(Mytest, 'test_hello_3') is not None
 
     elif six.PY3:
 
@@ -332,9 +378,9 @@ def test_ddt_data_unicode():
             def test_hello(self, val):
                 pass
 
-        assert_is_not_none(getattr(Mytest, 'test_hello_1_ascii'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_2_non_ascii__'))
-        assert_is_not_none(getattr(Mytest, 'test_hello_3'))
+        assert getattr(Mytest, 'test_hello_1_ascii') is not None
+        assert getattr(Mytest, 'test_hello_2_non_ascii__') is not None
+        assert getattr(Mytest, 'test_hello_3') is not None
 
 
 def test_ddt_data_object():
@@ -347,8 +393,7 @@ def test_ddt_data_object():
         @data(object())
         def test_object(self, val):
             pass
-
-    assert_is_not_none(getattr(Mytest, 'test_object_1'))
+    assert getattr(Mytest, 'test_object_1') is not None
 
 
 def test_feed_data_with_invalid_identifier():
@@ -356,15 +401,15 @@ def test_feed_data_with_invalid_identifier():
     Test that data is fed to the decorated tests
     """
     tests = list(filter(_is_test, DummyInvalidIdentifier.__dict__))
-    assert_equal(len(tests), 1)
+    assert len(tests) == 1
 
     obj = DummyInvalidIdentifier()
     method = getattr(obj, tests[0])
-    assert_equal(
-        method.__name__,
+    assert (
+        method.__name__ ==
         'test_data_with_invalid_identifier_1_32v2_g__Gmw845h_W_b53wi_'
     )
-    assert_equal(method(), '32v2 g #Gmw845h$W b53wi.')
+    assert method() == '32v2 g #Gmw845h$W b53wi.'
 
 
 @mock.patch('ddt._have_yaml', False)
@@ -376,13 +421,53 @@ def test_load_yaml_without_yaml_support():
     @ddt
     class NoYAMLInstalledTest(object):
 
-        @file_data('test_data_dict.yaml')
+        @file_data('data/test_data_dict.yaml')
         def test_file_data_yaml_dict(self, value):
-            assert_true(has_three_elements(value))
+            assert has_three_elements(value)
 
     tests = filter(_is_test, NoYAMLInstalledTest.__dict__)
 
     obj = NoYAMLInstalledTest()
     for test in tests:
         method = getattr(obj, test)
-        assert_raises(ValueError, method)
+        with pytest.raises(ValueError):
+            method()
+
+
+def test_load_yaml_with_python_tag():
+    """
+    Test that YAML files containing python tags throw no exception if an
+    loader allowing python tags is passed.
+    """
+
+    from yaml import FullLoader
+    from yaml.constructor import ConstructorError
+
+    def str_to_type(class_name):
+        return getattr(modules[__name__], class_name)
+
+    try:
+        @ddt
+        class YamlDefaultLoaderTest(object):
+            @file_data('data/test_functional_custom_tags.yaml')
+            def test_cls_is_instance(self, cls, expected):
+                assert isinstance(cls, str_to_type(expected))
+    except Exception as e:
+        if not isinstance(e, ConstructorError):
+            raise AssertionError()
+
+    @ddt
+    class YamlFullLoaderTest(object):
+        @file_data('data/test_functional_custom_tags.yaml', FullLoader)
+        def test_cls_is_instance(self, instance, expected):
+            assert isinstance(instance, str_to_type(expected))
+
+    tests = list(filter(_is_test, YamlFullLoaderTest.__dict__))
+    obj = YamlFullLoaderTest()
+
+    if not tests:
+        raise AssertionError('No tests have been found.')
+
+    for test in tests:
+        method = getattr(obj, test)
+        method()

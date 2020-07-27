@@ -5,11 +5,12 @@
 # DDT is licensed under the MIT License, included in
 # https://github.com/datadriventests/ddt/blob/master/LICENSE.md
 
+import codecs
 import inspect
 import json
 import os
 import re
-import codecs
+from enum import Enum, unique
 from functools import wraps
 
 try:
@@ -19,22 +20,50 @@ except ImportError:  # pragma: no cover
 else:
     _have_yaml = True
 
-__version__ = '1.2.1'
+__version__ = '1.4.1'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
 # by the `ddt` class decorator.
 
-DATA_ATTR = '%values'      # store the data the test must run with
-FILE_ATTR = '%file_path'   # store the path to JSON file
-UNPACK_ATTR = '%unpack'    # remember that we have to unpack values
-index_len = 5              # default max length of case index
+DATA_ATTR = '%values'              # store the data the test must run with
+FILE_ATTR = '%file_path'           # store the path to JSON file
+YAML_LOADER_ATTR = '%yaml_loader'  # store custom yaml loader for serialization
+UNPACK_ATTR = '%unpack'            # remember that we have to unpack values
+index_len = 5                      # default max length of case index
 
 
 try:
     trivial_types = (type(None), bool, int, float, basestring)
 except NameError:
     trivial_types = (type(None), bool, int, float, str)
+
+
+@unique
+class TestNameFormat(Enum):
+    """
+    An enum to configure how ``mk_test_name()`` to compose a test name.  Given
+    the following example:
+
+    .. code-block:: python
+
+        @data("a", "b")
+        def testSomething(self, value):
+            ...
+
+    if using just ``@ddt`` or together with ``DEFAULT``:
+
+    * ``testSomething_1_a``
+    * ``testSomething_2_b``
+
+    if using ``INDEX_ONLY``:
+
+    * ``testSomething_1``
+    * ``testSomething_2``
+
+    """
+    DEFAULT = 0
+    INDEX_ONLY = 1
 
 
 def is_trivial(value):
@@ -79,7 +108,7 @@ def idata(iterable):
     return wrapper
 
 
-def file_data(value):
+def file_data(value, yaml_loader=None):
     """
     Method decorator to add to your test methods.
 
@@ -97,14 +126,19 @@ def file_data(value):
     In case of a dict, keys will be used as suffixes to the name of the
     test case, and values will be fed as test data.
 
+    ``yaml_loader`` can be used to customize yaml deserialization.
+    The default is ``None``, which results in using the ``yaml.safe_load``
+    method.
     """
     def wrapper(func):
         setattr(func, FILE_ATTR, value)
+        if yaml_loader:
+            setattr(func, YAML_LOADER_ATTR, yaml_loader)
         return func
     return wrapper
 
 
-def mk_test_name(name, value, index=0):
+def mk_test_name(name, value, index=0, name_fmt=TestNameFormat.DEFAULT):
     """
     Generate a new name for a test case.
 
@@ -120,11 +154,14 @@ def mk_test_name(name, value, index=0):
 
     A "trivial" value is a plain scalar, or a tuple or list consisting
     only of trivial values.
+
+    The test name format is controlled by enum ``TestNameFormat`` as well. See
+    the enum documentation for further details.
     """
 
     # Add zeros before index to keep order
     index = "{0:0{1}}".format(index + 1, index_len)
-    if not is_trivial(value):
+    if name_fmt is TestNameFormat.INDEX_ONLY or not is_trivial(value):
         return "{0}_{1}".format(name, index)
     try:
         value = str(value)
@@ -212,7 +249,11 @@ def process_file_data(cls, name, func, file_attr):
     with codecs.open(data_file_path, 'r', 'utf-8') as f:
         # Load the data from YAML or JSON
         if _is_yaml_file:
-            data = yaml.safe_load(f)
+            if hasattr(func, YAML_LOADER_ATTR):
+                yaml_loader = getattr(func, YAML_LOADER_ATTR)
+                data = yaml.load(f, Loader=yaml_loader)
+            else:
+                data = yaml.safe_load(f)
         else:
             data = json.load(f)
 
@@ -253,7 +294,7 @@ def _get_test_data_docstring(func, value):
         return None
 
 
-def ddt(cls):
+def ddt(arg=None, **kwargs):
     """
     Class decorator for subclasses of ``unittest.TestCase``.
 
@@ -276,35 +317,56 @@ def ddt(cls):
     for each ``test_name`` key create as many methods in the list of values
     from the ``data`` key.
 
+    Decorating with the keyword argument ``testNameFormat`` can control the
+    format of the generated test names.  For example:
+
+    - ``@ddt(testNameFormat=TestNameFormat.DEFAULT)`` will be index and values.
+
+    - ``@ddt(testNameFormat=TestNameFormat.INDEX_ONLY)`` will be index only.
+
+    - ``@ddt`` is the same as DEFAULT.
+
     """
-    for name, func in list(cls.__dict__.items()):
-        if hasattr(func, DATA_ATTR):
-            for i, v in enumerate(getattr(func, DATA_ATTR)):
-                test_name = mk_test_name(name, getattr(v, "__name__", v), i)
-                test_data_docstring = _get_test_data_docstring(func, v)
-                if hasattr(func, UNPACK_ATTR):
-                    if isinstance(v, tuple) or isinstance(v, list):
-                        add_test(
-                            cls,
-                            test_name,
-                            test_data_docstring,
-                            func,
-                            *v
-                        )
+    fmt_test_name = kwargs.get("testNameFormat", TestNameFormat.DEFAULT)
+
+    def wrapper(cls):
+        for name, func in list(cls.__dict__.items()):
+            if hasattr(func, DATA_ATTR):
+                for i, v in enumerate(getattr(func, DATA_ATTR)):
+                    test_name = mk_test_name(
+                        name,
+                        getattr(v, "__name__", v),
+                        i,
+                        fmt_test_name
+                    )
+                    test_data_docstring = _get_test_data_docstring(func, v)
+                    if hasattr(func, UNPACK_ATTR):
+                        if isinstance(v, tuple) or isinstance(v, list):
+                            add_test(
+                                cls,
+                                test_name,
+                                test_data_docstring,
+                                func,
+                                *v
+                            )
+                        else:
+                            # unpack dictionary
+                            add_test(
+                                cls,
+                                test_name,
+                                test_data_docstring,
+                                func,
+                                **v
+                            )
                     else:
-                        # unpack dictionary
-                        add_test(
-                            cls,
-                            test_name,
-                            test_data_docstring,
-                            func,
-                            **v
-                        )
-                else:
-                    add_test(cls, test_name, test_data_docstring, func, v)
-            delattr(cls, name)
-        elif hasattr(func, FILE_ATTR):
-            file_attr = getattr(func, FILE_ATTR)
-            process_file_data(cls, name, func, file_attr)
-            delattr(cls, name)
-    return cls
+                        add_test(cls, test_name, test_data_docstring, func, v)
+                delattr(cls, name)
+            elif hasattr(func, FILE_ATTR):
+                file_attr = getattr(func, FILE_ATTR)
+                process_file_data(cls, name, func, file_attr)
+                delattr(cls, name)
+        return cls
+
+    # ``arg`` is the unittest's test class when decorating with ``@ddt`` while
+    # it is ``None`` when decorating a test class with ``@ddt(k=v)``.
+    return wrapper(arg) if inspect.isclass(arg) else wrapper

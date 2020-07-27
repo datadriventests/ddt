@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/datadriventests/ddt.svg)](https://travis-ci.org/datadriventests/ddt)
+![Run Tests](https://github.com/datadriventests/ddt/workflows/Run%20Tests/badge.svg?branch=master)
 [![codecov.io](https://codecov.io/github/datadriventests/ddt/coverage.svg?branch=master)](https://codecov.io/github/datadriventests/ddt)
 <br />
 [![Version](https://img.shields.io/pypi/v/ddt.svg)](https://pypi.python.org/pypi/ddt)

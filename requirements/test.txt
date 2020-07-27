@@ -1,7 +1,8 @@
 codecov
 coverage
 flake8
-nose
+pytest
+pytest-cov
 six>=1.4.0
 PyYAML
 mock; python_version < '3.3'

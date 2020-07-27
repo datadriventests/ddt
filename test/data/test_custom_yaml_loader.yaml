@@ -1,0 +1,65 @@
+bool:
+  instance: !!bool "false"
+  expected: false
+
+str:
+  instance: !!str "test"
+  expected: test
+
+int:
+  instance: !!int "32"
+  expected: 32
+
+float:
+  instance: !!float "3.123"
+  expected: 3.123
+
+python_list:
+  instance: !!python/list [1,2,3,4]
+  expected:
+    - 1
+    - 2
+    - 3
+    - 4
+
+python_dict:
+  instance: !!python/dict
+    a: 1
+    b: asd
+    c: false
+  expected:
+    a: 1
+    b: asd
+    c: false
+
+my_class:
+  instance: !!python/object:test.test_example.MyClass
+    a: 132
+    b: true
+    c:
+      - alpha
+      - beta
+    d:
+      _a: 1
+      _b: test
+  expected:
+    a: 132
+    b: true
+    c:
+      - alpha
+      - beta
+    d:
+      _a: 1
+      _b: test
+
+python_str:
+  instance: !!python/str "test"
+  expected: test
+
+python_int:
+  instance: !!python/int "32"
+  expected: 32
+
+python_float:
+  instance: !!python/float "3.123"
+  expected: 3.123
