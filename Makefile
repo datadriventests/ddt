@@ -7,6 +7,9 @@ local_all: venv_test venv_flake8 venv_isort
 
 all: test flake8 isort
 
+install:
+	pip install -Ur requirements.txt
+
 venv: venv/bin/activate
 
 venv/bin/activate: requirements.txt
@@ -15,7 +18,7 @@ venv/bin/activate: requirements.txt
 	touch venv/bin/activate
 
 .PHONY: test
-test:
+test: install
 	sh -c $(PYTEST_COMMAND)
 
 .PHONY: venv_test
@@ -23,16 +26,18 @@ venv_test: venv
 	. venv/bin/activate; sh -c $(PYTEST_COMMAND)
 
 .PHONY: flake8
-flake8:
+flake8: install
 	sh -c $(FLAKE8_COMMAND)
 
+.PHONY: venv_flake8
 venv_flake8: venv
 	. venv/bin/activate; sh -c $(FLAKE8_COMMAND)
 
 .PHONY: isort
-isort:
+isort: install
 	sh -c $(ISORT_COMMAND)
 
+.PHONY: venv_isort
 venv_isort: venv
 	. venv/bin/activate; sh -c $(ISORT_COMMAND)
 
