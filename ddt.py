@@ -30,7 +30,7 @@ DATA_ATTR = '%values'              # store the data the test must run with
 FILE_ATTR = '%file_path'           # store the path to JSON file
 YAML_LOADER_ATTR = '%yaml_loader'  # store custom yaml loader for serialization
 UNPACK_ATTR = '%unpack'            # remember that we have to unpack values
-index_len = 5                      # default max length of case index
+INDEX_LEN = '%index_len'           # store the index length of the data
 
 
 try:
@@ -90,12 +90,10 @@ def data(*values):
     Should be added to methods of instances of ``unittest.TestCase``.
 
     """
-    global index_len
-    index_len = len(str(len(values)))
-    return idata(values)
+    return idata(values, len(str(len(values))))
 
 
-def idata(iterable):
+def idata(iterable, index_len):
     """
     Method decorator to add to your test methods.
 
@@ -104,6 +102,7 @@ def idata(iterable):
     """
     def wrapper(func):
         setattr(func, DATA_ATTR, iterable)
+        setattr(func, INDEX_LEN, index_len)
         return func
     return wrapper
 
@@ -138,7 +137,7 @@ def file_data(value, yaml_loader=None):
     return wrapper
 
 
-def mk_test_name(name, value, index=0, name_fmt=TestNameFormat.DEFAULT):
+def mk_test_name(name, value, index=0, index_len=5, name_fmt=TestNameFormat.DEFAULT):
     """
     Generate a new name for a test case.
 
@@ -337,6 +336,7 @@ def ddt(arg=None, **kwargs):
                         name,
                         getattr(v, "__name__", v),
                         i,
+                        getattr(func, INDEX_LEN),
                         fmt_test_name
                     )
                     test_data_docstring = _get_test_data_docstring(func, v)
