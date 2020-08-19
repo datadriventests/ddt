@@ -115,12 +115,11 @@ def test_data_decorator():
     post_size = len(data_hello.__dict__)
 
     assert post_size == pre_size + 2
-    extra_attrs = dh_keys - keys
+    extra_attrs = list(dh_keys - keys)
+    extra_attrs.sort()
     assert len(extra_attrs) == 2
-    extra_attr = extra_attrs.pop()
-    assert getattr(data_hello, extra_attr) == 1
-    extra_attr = extra_attrs.pop()
-    assert getattr(data_hello, extra_attr) == (1, 2)
+    assert getattr(data_hello, extra_attrs[0]) == 1
+    assert getattr(data_hello, extra_attrs[1]) == (1,2)
 
 
 def test_file_data_decorator_with_dict():
@@ -138,13 +137,12 @@ def test_file_data_decorator_with_dict():
     dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
     assert post_size == pre_size + 2
-    extra_attrs = dh_keys - keys
-
+    
+    extra_attrs = list(dh_keys - keys)
+    extra_attrs.sort()
     assert len(extra_attrs) == 2
-    extra_attr = extra_attrs.pop()
-    assert getattr(data_hello, extra_attr) == 1
-    extra_attr = extra_attrs.pop()
-    assert getattr(data_hello, extra_attr) == ("test_data_dict.json",)
+    assert getattr(data_hello, extra_attrs[0]) == 1
+    assert getattr(data_hello, extra_attrs[1]) == ("test_data_dict.json",)
 
 
 def _is_test(x):
