@@ -137,11 +137,12 @@ def test_file_data_decorator_with_dict():
 
     dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
-
-    assert post_size == pre_size + 1
+    assert post_size == pre_size + 2
     extra_attrs = dh_keys - keys
 
-    assert len(extra_attrs) == 1
+    assert len(extra_attrs) == 2
+    extra_attr = extra_attrs.pop()
+    assert getattr(data_hello, extra_attr) == 1
     extra_attr = extra_attrs.pop()
     assert getattr(data_hello, extra_attr) == ("test_data_dict.json",)
 
