@@ -331,12 +331,13 @@ def ddt(arg=None, **kwargs):
     def wrapper(cls):
         for name, func in list(cls.__dict__.items()):
             if hasattr(func, DATA_ATTR):
+                index_len = getattr(func, INDEX_LEN)
                 for i, v in enumerate(getattr(func, DATA_ATTR)):
                     test_name = mk_test_name(
                         name,
                         getattr(v, "__name__", v),
                         i,
-                        getattr(func, INDEX_LEN),
+                        index_len,
                         fmt_test_name
                     )
                     test_data_docstring = _get_test_data_docstring(func, v)
