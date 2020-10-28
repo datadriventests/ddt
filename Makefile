@@ -1,5 +1,4 @@
 VENV_DIR = venv
-PYTEST_COMMAND = "pytest --cov=ddt --cov-report html"
 FLAKE8_COMMAND = "flake8 ddt.py test"
 ISORT_COMMAND = "isort --check-only --diff --skip-glob=.tox ."
 
@@ -19,11 +18,11 @@ venv/bin/activate: requirements.txt
 
 .PHONY: test
 test: install
-	sh -c $(PYTEST_COMMAND)
+	sh -c pytest
 
 .PHONY: venv_test
 venv_test: venv
-	. venv/bin/activate; sh -c $(PYTEST_COMMAND)
+	. venv/bin/activate; sh -c pytest
 
 .PHONY: flake8
 flake8: install
