@@ -8,7 +8,7 @@ multiple test cases.
 You can find (and fork) the project on Github_.
 
 DDT should work on Python2 and Python3, but we only officially test it for
-versions 2.7 and 3.5.
+versions 2.7 and 3.5-3.8.
 
 Contents:
 
