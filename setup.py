@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # # coding: utf-8
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
-from ddt import __version__
+from src.ddt import __version__
 
 setup(
     name='ddt',
@@ -13,6 +13,8 @@ setup(
     author='Carles Barrobés',
     author_email='carles@barrobes.com',
     url='https://github.com/datadriventests/ddt',
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     py_modules=['ddt'],
     classifiers=[
         'Development Status :: 4 - Beta',

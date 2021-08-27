@@ -1,12 +1,12 @@
 VENV_DIR = venv
 FLAKE8_COMMAND = "flake8 ddt.py test"
-ISORT_COMMAND = "isort --check-only --diff --skip-glob=.tox ."
 
 local_all: venv_test venv_flake8 venv_isort
 
-all: test flake8 isort
+all: test flake8
 
 install:
+	python setup.py install
 	pip install -Ur requirements.txt
 
 venv: venv/bin/activate
@@ -31,10 +31,6 @@ flake8: install
 .PHONY: venv_flake8
 venv_flake8: venv
 	. venv/bin/activate; sh -c $(FLAKE8_COMMAND)
-
-.PHONY: isort
-isort: install
-	sh -c $(ISORT_COMMAND)
 
 .PHONY: venv_isort
 venv_isort: venv
