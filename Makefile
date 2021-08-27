@@ -1,5 +1,5 @@
 VENV_DIR = venv
-FLAKE8_COMMAND = "flake8 ddt.py test"
+FLAKE8_COMMAND = "flake8 src/ddt.py test"
 
 local_all: venv_test venv_flake8 venv_isort
 
