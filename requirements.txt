@@ -1,0 +1,16 @@
+codecov
+coverage
+enum34; python_version < '3'
+flake8
+isort
+mock; python_version < '3.3'
+pytest
+pytest-cov
+PyYAML
+setuptools
+six>=1.4.0
+Sphinx
+sphinxcontrib-programoutput
+twine
+wheel
+flake8-isort==4.0.0

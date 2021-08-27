@@ -1,6 +1,7 @@
-import os
 import json
+import os
 from sys import modules
+
 import pytest
 import six
 
@@ -9,9 +10,9 @@ try:
 except ImportError:
     import mock
 
-from ddt import ddt, data, file_data, TestNameFormat
-
 from test.mycode import has_three_elements
+
+from ddt import TestNameFormat, data, ddt, file_data
 
 
 class CustomClass:

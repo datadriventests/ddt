@@ -1,8 +1,0 @@
-codecov
-coverage
-flake8
-pytest
-pytest-cov
-six>=1.4.0
-PyYAML
-mock; python_version < '3.3'

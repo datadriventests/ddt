@@ -1,4 +1,0 @@
--r test.txt
-Sphinx
-sphinxcontrib-programoutput
-enum34; python_version < '3'
