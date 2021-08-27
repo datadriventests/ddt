@@ -151,7 +151,7 @@ if have_yaml_support:
 
     @ddt
     class YamlOnlyTestCase(unittest.TestCase):
-        @file_data('data/test_custom_yaml_loader.yaml', yaml.FullLoader)
+        @file_data('data/test_custom_yaml_loader.yaml', yaml.UnsafeLoader)
         def test_custom_yaml_loader(self, instance, expected):
             """Test with yaml tags to create specific classes to compare"""
             self.assertEqual(expected, instance)

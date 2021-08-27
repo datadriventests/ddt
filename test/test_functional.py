@@ -441,7 +441,7 @@ def test_load_yaml_with_python_tag():
     loader allowing python tags is passed.
     """
 
-    from yaml import FullLoader
+    from yaml import UnsafeLoader
     from yaml.constructor import ConstructorError
 
     def str_to_type(class_name):
@@ -458,13 +458,13 @@ def test_load_yaml_with_python_tag():
             raise AssertionError()
 
     @ddt
-    class YamlFullLoaderTest(object):
-        @file_data('data/test_functional_custom_tags.yaml', FullLoader)
+    class YamlUnsafeLoaderTest(object):
+        @file_data('data/test_functional_custom_tags.yaml', UnsafeLoader)
         def test_cls_is_instance(self, instance, expected):
             assert isinstance(instance, str_to_type(expected))
 
-    tests = list(filter(_is_test, YamlFullLoaderTest.__dict__))
-    obj = YamlFullLoaderTest()
+    tests = list(filter(_is_test, YamlUnsafeLoaderTest.__dict__))
+    obj = YamlUnsafeLoaderTest()
 
     if not tests:
         raise AssertionError('No tests have been found.')
