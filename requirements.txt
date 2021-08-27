@@ -13,3 +13,4 @@ Sphinx
 sphinxcontrib-programoutput
 twine
 wheel
+flake8-isort==4.0.0
