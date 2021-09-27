@@ -30,7 +30,7 @@ DATA_ATTR = '%values'              # store the data the test must run with
 FILE_ATTR = '%file_path'           # store the path to JSON file
 YAML_LOADER_ATTR = '%yaml_loader'  # store custom yaml loader for serialization
 UNPACK_ATTR = '%unpack'            # remember that we have to unpack values
-index_len = 5                      # default max length of case index
+INDEX_LEN = '%index_len'           # store the index length of the data
 
 
 try:
@@ -90,12 +90,10 @@ def data(*values):
     Should be added to methods of instances of ``unittest.TestCase``.
 
     """
-    global index_len
-    index_len = len(str(len(values)))
-    return idata(values)
+    return idata(values, len(str(len(values))))
 
 
-def idata(iterable):
+def idata(iterable, index_len):
     """
     Method decorator to add to your test methods.
 
@@ -104,6 +102,7 @@ def idata(iterable):
     """
     def wrapper(func):
         setattr(func, DATA_ATTR, iterable)
+        setattr(func, INDEX_LEN, index_len)
         return func
     return wrapper
 
@@ -138,7 +137,7 @@ def file_data(value, yaml_loader=None):
     return wrapper
 
 
-def mk_test_name(name, value, index=0, name_fmt=TestNameFormat.DEFAULT):
+def mk_test_name(name, value, index=0, index_len=5, name_fmt=TestNameFormat.DEFAULT):
     """
     Generate a new name for a test case.
 
@@ -264,13 +263,14 @@ def _add_tests_from_data(cls, name, func, data):
     """
     Add tests from data loaded from the data file into the class
     """
+    index_len = len(str(len(data)))
     for i, elem in enumerate(data):
         if isinstance(data, dict):
             key, value = elem, data[elem]
-            test_name = mk_test_name(name, key, i)
+            test_name = mk_test_name(name, key, i, index_len)
         elif isinstance(data, list):
             value = elem
-            test_name = mk_test_name(name, value, i)
+            test_name = mk_test_name(name, value, i, index_len)
         if isinstance(value, dict):
             add_test(cls, test_name, test_name, func, **value)
         else:
@@ -332,11 +332,13 @@ def ddt(arg=None, **kwargs):
     def wrapper(cls):
         for name, func in list(cls.__dict__.items()):
             if hasattr(func, DATA_ATTR):
+                index_len = getattr(func, INDEX_LEN)
                 for i, v in enumerate(getattr(func, DATA_ATTR)):
                     test_name = mk_test_name(
                         name,
                         getattr(v, "__name__", v),
                         i,
+                        index_len,
                         fmt_test_name
                     )
                     test_data_docstring = _get_test_data_docstring(func, v)
