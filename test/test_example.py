@@ -1,6 +1,7 @@
+import itertools
 import unittest
 
-from ddt import ddt, data, file_data, unpack
+from ddt import ddt, data, file_data, idata, unpack
 from test.mycode import larger_than_two, has_three_elements, is_a_greeting
 
 try:
@@ -63,6 +64,12 @@ class FooTestCase(unittest.TestCase):
     def test_greater(self, value):
         a, b = value
         self.assertGreater(a, b)
+
+    @idata(itertools.product([0, 1, 2], [3, 4, 5]))
+    def test_iterable_argument(self, value):
+        first_value, second_value = value
+        self.assertLessEqual(first_value, 2)
+        self.assertGreaterEqual(second_value, 3)
 
     @data(annotated2([2, 1], 'Test_case_1', """Test docstring 1"""),
           annotated2([10, 5], 'Test_case_2', """Test docstring 2"""))

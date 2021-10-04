@@ -9,7 +9,7 @@ try:
 except ImportError:
     import mock
 
-from ddt import ddt, data, file_data, TestNameFormat
+from ddt import ddt, data, file_data, idata, TestNameFormat
 
 from test.mycode import has_three_elements
 
@@ -183,6 +183,97 @@ def test_ddt_format_test_name_default():
     for i, d in zip(indexes, dataSets):
         assert not ("test_something_{}".format(i) in tests)
         assert ("test_something_{}_{}".format(i, d) in tests)
+
+
+def test_idata_single_argument():
+    """Test that the single-argument form of ``idata`` works."""
+    payload = [5, 12, 13]
+
+    @ddt
+    class Dummy(object):
+        """Dummy class to test that the ``idata(iterable)`` decorator works."""
+        @idata(payload)
+        def test_something(self, value):
+            return value
+
+    tests = list(filter(_is_test, Dummy.__dict__))
+    assert len(tests) == len(payload)
+
+    expected_tests = [
+        "test_something_{:1d}_{}".format(i + 1, v) for i, v in enumerate(payload)
+    ]
+    assert sorted(tests) == sorted(expected_tests)
+
+
+def test_idata_automatic_zero_padding():
+    """
+    Test that the single-argument form of ``idata`` zero-pads its keys so the
+    lengths all match
+    """
+    payload = range(15)
+
+    @ddt
+    class Dummy(object):
+        """Dummy class to test that the ``idata(iterable)`` decorator works."""
+        @idata(payload)
+        def test_something(self, value):
+            return value
+
+    tests = list(filter(_is_test, Dummy.__dict__))
+    assert len(tests) == len(payload)
+
+    expected_tests = [
+        "test_something_{:02d}_{}".format(i + 1, v) for i, v in enumerate(payload)
+    ]
+    assert sorted(tests) == sorted(expected_tests)
+
+
+def test_idata_override_index_len():
+    """
+    Test that overriding ``index_len`` in ``idata`` can allow additional
+    zero-padding to be added.
+    """
+    payload = [4, 2, 1]
+
+    @ddt
+    class Dummy(object):
+        @idata(payload, index_len=2)
+        def test_something(self, value):
+            return value
+
+    tests = list(filter(_is_test, Dummy.__dict__))
+    assert len(tests) == len(payload)
+
+    expected_tests = [
+        "test_something_{:02d}_{}".format(i + 1, v) for i, v in enumerate(payload)
+    ]
+    assert sorted(tests) == sorted(expected_tests)
+
+
+def test_idata_consumable_iterator():
+    """
+    Test that using ``idata`` with a consumable iterator still generates the
+    expected tests.
+    """
+    payload = [51, 78, 2]
+
+    def consumable_iterator():
+        # Not using `yield from` for Python 2.7.
+        for i in payload:
+            yield i
+
+    @ddt
+    class Dummy(object):
+        @idata(consumable_iterator())
+        def test_something(self, value):
+            return value
+
+    tests = list(filter(_is_test, Dummy.__dict__))
+
+    expected_tests = [
+        "test_something_{:1d}_{}".format(i + 1, v) for i, v in enumerate(payload)
+    ]
+    assert sorted(tests) == sorted(expected_tests)
 
 
 def test_file_data_test_creation():
