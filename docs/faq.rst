@@ -1,7 +1,5 @@
-Misc
-====
-
-This page contains some of the miscellaneous functionality.
+Known Issues and FAQ
+====================
 
 Docstring Handling
 ------------------

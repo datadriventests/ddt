@@ -16,8 +16,8 @@ Contents:
    :maxdepth: 2
 
    example
+   faq
    api
-   misc
 
 Indices and tables
 ==================
