@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover
 else:
     _have_yaml = True
 
-__version__ = '1.4.4'
+__version__ = '1.5.0'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
