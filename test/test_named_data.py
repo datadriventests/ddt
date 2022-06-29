@@ -17,9 +17,9 @@ class TestNamedData(unittest.TestCase):
 
     @named_data(
         ['1st', 1, 2],
-        ['2nd', 3, 4]
+        ('2nd', 3, 4)
     )
-    def test_multiple_named_value_lists(self, value1, value2):
+    def test_multiple_named_value_seqs(self, value1, value2):
         self.assertGreater(value2, value1)
 
     @named_data(
@@ -31,9 +31,9 @@ class TestNamedData(unittest.TestCase):
 
     @named_data(
         ['Passes', NonTrivialClass(), True],
-        ['Fails', 1, False]
+        ('Fails', 1, False)
     )
-    def test_list_with_nontrivial_type(self, value, passes):
+    def test_seq_with_nontrivial_type(self, value, passes):
         if passes:
             self.assertIsInstance(value, self.NonTrivialClass)
         else:

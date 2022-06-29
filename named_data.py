@@ -1,4 +1,5 @@
 import ddt
+from collections import Sequence
 
 
 class NamedDataList(list):
@@ -54,30 +55,30 @@ def named_data(*named_values):
 
     Note that @unpack is not used.
 
-    :param list[Any] | dict[Any,Any] named_values: Each named_value should be a list with the name as the first
+    :param Sequence[Any] | dict[Any,Any] named_values: Each named_value should be a list with the name as the first
         argument, or a dictionary with 'name' as one of the keys. The name will be coerced to a string and all other
         values will be passed unchanged to the test.
     """
     type_of_first = None
     values = []
     for named_value in named_values:
-        if type_of_first is None:
-            type_of_first = type(named_value)
-
-        if not isinstance(named_value, type_of_first):
+        if type_of_first is not None and not isinstance(named_value, type_of_first):
             raise TypeError("@named_data expects all values to be of the same type.")
 
-        if isinstance(named_value, list):
+        if isinstance(named_value, Sequence):
             value = NamedDataList(named_value[0], *named_value[1:])
-            type_of_first = type_of_first or list
+            type_of_first = type_of_first or Sequence
 
         elif isinstance(named_value, dict):
             if "name" not in named_value.keys():
                 raise ValueError("@named_data expects a dictionary with a 'name' key.")
             value = NamedDataDict(**named_value)
             type_of_first = type_of_first or dict
+
         else:
-            raise TypeError("@named_data expects a list or dictionary.")
+            raise TypeError(
+                "@named_data expects a Sequence (list, tuple) or dictionary, and not '{}'.".format(type(named_value))
+            )
 
         # Remove the __doc__ attribute so @ddt.data doesn't add the NamedData class docstrings to the test name.
         value.__doc__ = None
