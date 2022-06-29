@@ -20,6 +20,8 @@ except ImportError:  # pragma: no cover
 else:
     _have_yaml = True
 
+from named_data_types import NamedDataDict, NamedDataList
+
 __version__ = '1.5.0'
 
 # These attributes will not conflict with any real python attribute
@@ -32,11 +34,11 @@ YAML_LOADER_ATTR = '%yaml_loader'  # store custom yaml loader for serialization
 UNPACK_ATTR = '%unpack'            # remember that we have to unpack values
 INDEX_LEN = '%index_len'           # store the index length of the data
 
-
+trivial_types = (type(None), bool, int, float, NamedDataList, NamedDataDict)
 try:
-    trivial_types = (type(None), bool, int, float, basestring)
+    trivial_types += (basestring, )
 except NameError:
-    trivial_types = (type(None), bool, int, float, str)
+    trivial_types += (str, )
 
 
 @unique
@@ -382,3 +384,68 @@ def ddt(arg=None, **kwargs):
     # ``arg`` is the unittest's test class when decorating with ``@ddt`` while
     # it is ``None`` when decorating a test class with ``@ddt(k=v)``.
     return wrapper(arg) if inspect.isclass(arg) else wrapper
+
+
+def named_data(*named_values):
+    """
+    This decorator is to allow for meaningful names to be given to tests that would otherwise use @ddt.data and
+    @ddt.unpack.
+
+    Example of original ddt usage:
+        @ddt.ddt
+        class TestExample(TemplateTest):
+            @ddt.data(
+                [0, 1],
+                [10, 11]
+            )
+            @ddt.unpack
+            def test_values(self, value1, value2):
+                ...
+
+    Example of new usage:
+        @ddt.ddt
+        class TestExample(TemplateTest):
+            @named_data(
+                ['A', 0, 1],
+                ['B', 10, 11],
+            )
+            def test_values(self, value1, value2):
+                ...
+
+    Note that @unpack is not used.
+
+    :param list[Any] | dict[Any,Any] named_values: Each named_value should be a list with the name as the first
+        argument, or a dictionary with 'name' as one of the keys. The name will be coerced to a string and all other
+        values will be passed unchanged to the test.
+    """
+    type_of_first = None
+    values = []
+    for named_value in named_values:
+        if type_of_first is None:
+            type_of_first = type(named_value)
+
+        if not isinstance(named_value, type_of_first):
+            raise TypeError("@named_data expects all values to be of the same type.")
+
+        if isinstance(named_value, list):
+            value = NamedDataList(named_value[0], *named_value[1:])
+            type_of_first = type_of_first or list
+
+        elif isinstance(named_value, dict):
+            if "name" not in named_value.keys():
+                raise ValueError("@named_data expects a dictionary with a 'name' key.")
+            value = NamedDataDict(**named_value)
+            type_of_first = type_of_first or dict
+        else:
+            raise TypeError("@named_data expects a list or dictionary.")
+
+        # Remove the __doc__ attribute so @ddt.data doesn't add the NamedData class docstrings to the test name.
+        value.__doc__ = None
+
+        values.append(value)
+
+    def wrapper(func):
+        data(*values)(unpack(func))
+        return func
+
+    return wrapper
