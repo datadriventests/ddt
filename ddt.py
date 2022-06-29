@@ -20,8 +20,6 @@ except ImportError:  # pragma: no cover
 else:
     _have_yaml = True
 
-from named_data_types import NamedDataDict, NamedDataList
-
 __version__ = '1.5.0'
 
 # These attributes will not conflict with any real python attribute
@@ -33,6 +31,26 @@ FILE_ATTR = '%file_path'           # store the path to JSON file
 YAML_LOADER_ATTR = '%yaml_loader'  # store custom yaml loader for serialization
 UNPACK_ATTR = '%unpack'            # remember that we have to unpack values
 INDEX_LEN = '%index_len'           # store the index length of the data
+
+
+# These are helper classes for @named_data that allow ddt tests to have meaningful names.
+class NamedDataList(list):
+    def __init__(self, name, *args):
+        super(NamedDataList, self).__init__(args)
+        self.name = name
+
+    def __str__(self):
+        return str(self.name)
+
+
+class NamedDataDict(dict):
+    def __init__(self, name, **kwargs):
+        super(NamedDataDict, self).__init__(kwargs)
+        self.name = name
+
+    def __str__(self):
+        return str(self.name)
+
 
 trivial_types = (type(None), bool, int, float, NamedDataList, NamedDataDict)
 try:
