@@ -7,8 +7,6 @@ except ImportError:
     # Python 2.7
     from collections import Sequence
 
-from collections import Sequence
-
 
 class NamedDataList(list):
     """ This is a helper class for @named_data that allows ddt tests to have meaningful names. """
