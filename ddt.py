@@ -10,14 +10,8 @@ import inspect
 import json
 import os
 import re
+from enum import Enum, unique
 from functools import wraps
-
-try:
-    # Python 3.4 or greater.
-    from enum import Enum, unique
-except ImportError:
-    # Python 3.4 or lower.
-    from enum34 import Enum, unique
 
 try:
     import yaml
