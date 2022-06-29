@@ -1,4 +1,12 @@
 import ddt
+
+try:
+    # Python 3
+    from collections.abc import Sequence
+except ImportError:
+    # Python 2.7
+    from collections import Sequence
+
 from collections import Sequence
 
 
