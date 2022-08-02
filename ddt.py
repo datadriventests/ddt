@@ -445,31 +445,15 @@ def named_data(*named_values):
         the name as the first element, or a dictionary with 'name' as one of the keys. The name will be coerced to a
         string and all other values will be passed unchanged to the test.
     """
-    type_of_first = None
     values = []
     for named_value in named_values:
-
-        # Record type of first element to compare to others.
-        if type_of_first is None:
-            if isinstance(named_value, Sequence):
-                type_of_first = Sequence
-            elif isinstance(named_value, dict):
-                type_of_first = dict
-
-        # Compare to type_of_first to ensure all elements are compatible.
-        if not isinstance(named_value, type_of_first):
-            raise TypeError("@named_data expects all values to be of the same type: "
-                            "expected type '{}' and found type '{}'.".format(type_of_first, type(named_value)))
-
-        # Parse values.
-        if isinstance(named_value, Sequence):
-            value = _NamedDataList(named_value[0], *named_value[1:])
-        elif isinstance(named_value, dict):
-            value = _NamedDataDict(**named_value)
-        else:
+        if not isinstance(named_value,(Sequence, dict)):
             raise TypeError(
                 "@named_data expects a Sequence (list, tuple) or dictionary, and not '{}'.".format(type(named_value))
             )
+
+        value = _NamedDataDict(**named_value) if isinstance(named_value, dict) \
+            else _NamedDataList(named_value[0], *named_value[1:])
 
         # Remove the __doc__ attribute so @ddt.data doesn't add the NamedData class docstrings to the test name.
         value.__doc__ = None

@@ -28,6 +28,13 @@ class TestNamedData(unittest.TestCase):
         self.assertGreater(value2, value1)
 
     @ddt.named_data(
+        dict(name='1st', value2=1, value1=0),
+        ('2nd', 0, 1)
+    )
+    def test_multiple_named_value_mixed(self, value1, value2):
+        self.assertGreater(value2, value1)
+
+    @ddt.named_data(
         ['Passes', NonTrivialClass(), True],
         ('Fails', 1, False)
     )
