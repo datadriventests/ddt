@@ -53,3 +53,14 @@ class TestNamedData(unittest.TestCase):
             self.assertIsInstance(value, self.NonTrivialClass)
         else:
             self.assertNotIsInstance(value, self.NonTrivialClass)
+
+    def test_missing_name_dict(self):
+        with self.assertRaises(KeyError):
+            @ddt.named_data(
+                {'not_a_name': 'oops', 'value': 1}
+            )
+            def _internal_test(value):
+                return value
+
+
+

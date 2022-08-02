@@ -53,7 +53,7 @@ class _NamedDataList(list):
 class _NamedDataDict(dict):
     def __init__(self, **kwargs):
         if "name" not in kwargs.keys():
-            raise ValueError("@named_data expects a dictionary with a 'name' key.")
+            raise KeyError("@named_data expects a dictionary with a 'name' key.")
         self.name = kwargs.pop('name')
         super(_NamedDataDict, self).__init__(kwargs)
 
