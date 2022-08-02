@@ -60,7 +60,7 @@ class TestNamedData(unittest.TestCase):
                 {'not_a_name': 'oops', 'value': 1}
             )
             def _internal_test(value):
-                return value
+                pass
 
 
 
