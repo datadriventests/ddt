@@ -41,25 +41,27 @@ INDEX_LEN = '%index_len'           # store the index length of the data
 
 
 # These are helper classes for @named_data that allow ddt tests to have meaningful names.
-class NamedDataList(list):
+class _NamedDataList(list):
     def __init__(self, name, *args):
-        super(NamedDataList, self).__init__(args)
+        super(_NamedDataList, self).__init__(args)
         self.name = name
 
     def __str__(self):
         return str(self.name)
 
 
-class NamedDataDict(dict):
-    def __init__(self, name, **kwargs):
-        super(NamedDataDict, self).__init__(kwargs)
-        self.name = name
+class _NamedDataDict(dict):
+    def __init__(self, **kwargs):
+        if "name" not in kwargs.keys():
+            raise ValueError("@named_data expects a dictionary with a 'name' key.")
+        self.name = kwargs.pop('name')
+        super(_NamedDataDict, self).__init__(kwargs)
 
     def __str__(self):
         return str(self.name)
 
 
-trivial_types = (type(None), bool, int, float, NamedDataList, NamedDataDict)
+trivial_types = (type(None), bool, int, float, _NamedDataList, _NamedDataDict)
 try:
     trivial_types += (basestring, )
 except NameError:
@@ -446,19 +448,24 @@ def named_data(*named_values):
     type_of_first = None
     values = []
     for named_value in named_values:
-        if type_of_first is not None and not isinstance(named_value, type_of_first):
-            raise TypeError("@named_data expects all values to be of the same type.")
 
+        # Record type of first element to compare to others.
+        if type_of_first is None:
+            if isinstance(named_value, Sequence):
+                type_of_first = Sequence
+            elif isinstance(named_value, dict):
+                type_of_first = dict
+
+        # Compare to type_of_first to ensure all elements are compatible.
+        if not isinstance(named_value, type_of_first):
+            raise TypeError("@named_data expects all values to be of the same type: "
+                            "expected type '{}' and found type '{}'.".format(type_of_first, type(named_value)))
+
+        # Parse values.
         if isinstance(named_value, Sequence):
-            value = NamedDataList(named_value[0], *named_value[1:])
-            type_of_first = type_of_first or Sequence
-
+            value = _NamedDataList(named_value[0], *named_value[1:])
         elif isinstance(named_value, dict):
-            if "name" not in named_value.keys():
-                raise ValueError("@named_data expects a dictionary with a 'name' key.")
-            value = NamedDataDict(**named_value)
-            type_of_first = type_of_first or dict
-
+            value = _NamedDataDict(**named_value)
         else:
             raise TypeError(
                 "@named_data expects a Sequence (list, tuple) or dictionary, and not '{}'.".format(type(named_value))
