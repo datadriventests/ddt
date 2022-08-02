@@ -447,7 +447,7 @@ def named_data(*named_values):
     """
     values = []
     for named_value in named_values:
-        if not isinstance(named_value,(Sequence, dict)):
+        if not isinstance(named_value, (Sequence, dict)):
             raise TypeError(
                 "@named_data expects a Sequence (list, tuple) or dictionary, and not '{}'.".format(type(named_value))
             )
