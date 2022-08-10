@@ -20,6 +20,13 @@ except ImportError:  # pragma: no cover
 else:
     _have_yaml = True
 
+try:
+    # Python >=3
+    from collections.abc import Sequence
+except ImportError:
+    # Python 2.7
+    from collections import Sequence
+
 __version__ = '1.5.0'
 
 # These attributes will not conflict with any real python attribute
@@ -34,25 +41,27 @@ INDEX_LEN = '%index_len'           # store the index length of the data
 
 
 # These are helper classes for @named_data that allow ddt tests to have meaningful names.
-class NamedDataList(list):
+class _NamedDataList(list):
     def __init__(self, name, *args):
-        super(NamedDataList, self).__init__(args)
+        super(_NamedDataList, self).__init__(args)
         self.name = name
 
     def __str__(self):
         return str(self.name)
 
 
-class NamedDataDict(dict):
-    def __init__(self, name, **kwargs):
-        super(NamedDataDict, self).__init__(kwargs)
-        self.name = name
+class _NamedDataDict(dict):
+    def __init__(self, **kwargs):
+        if "name" not in kwargs.keys():
+            raise KeyError("@named_data expects a dictionary with a 'name' key.")
+        self.name = kwargs.pop('name')
+        super(_NamedDataDict, self).__init__(kwargs)
 
     def __str__(self):
         return str(self.name)
 
 
-trivial_types = (type(None), bool, int, float, NamedDataList, NamedDataDict)
+trivial_types = (type(None), bool, int, float, _NamedDataList, _NamedDataDict)
 try:
     trivial_types += (basestring, )
 except NameError:
@@ -424,38 +433,27 @@ def named_data(*named_values):
         @ddt.ddt
         class TestExample(TemplateTest):
             @named_data(
-                ['A', 0, 1],
-                ['B', 10, 11],
+                ['LabelA', 0, 1],
+                ['LabelB', 10, 11],
             )
             def test_values(self, value1, value2):
                 ...
 
     Note that @unpack is not used.
 
-    :param list[Any] | dict[Any,Any] named_values: Each named_value should be a list with the name as the first
-        argument, or a dictionary with 'name' as one of the keys. The name will be coerced to a string and all other
-        values will be passed unchanged to the test.
+    :param Sequence[Any] | dict[Any,Any] named_values: Each named_value should be a Sequence (e.g. list or tuple) with
+        the name as the first element, or a dictionary with 'name' as one of the keys. The name will be coerced to a
+        string and all other values will be passed unchanged to the test.
     """
-    type_of_first = None
     values = []
     for named_value in named_values:
-        if type_of_first is None:
-            type_of_first = type(named_value)
+        if not isinstance(named_value, (Sequence, dict)):
+            raise TypeError(
+                "@named_data expects a Sequence (list, tuple) or dictionary, and not '{}'.".format(type(named_value))
+            )
 
-        if not isinstance(named_value, type_of_first):
-            raise TypeError("@named_data expects all values to be of the same type.")
-
-        if isinstance(named_value, list):
-            value = NamedDataList(named_value[0], *named_value[1:])
-            type_of_first = type_of_first or list
-
-        elif isinstance(named_value, dict):
-            if "name" not in named_value.keys():
-                raise ValueError("@named_data expects a dictionary with a 'name' key.")
-            value = NamedDataDict(**named_value)
-            type_of_first = type_of_first or dict
-        else:
-            raise TypeError("@named_data expects a list or dictionary.")
+        value = _NamedDataDict(**named_value) if isinstance(named_value, dict) \
+            else _NamedDataList(named_value[0], *named_value[1:])
 
         # Remove the __doc__ attribute so @ddt.data doesn't add the NamedData class docstrings to the test name.
         value.__doc__ = None
