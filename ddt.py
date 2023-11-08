@@ -27,7 +27,7 @@ except ImportError:
     # Python 2.7
     from collections import Sequence
 
-__version__ = '1.6.0'
+__version__ = '1.7.0'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
