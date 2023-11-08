@@ -215,9 +215,15 @@ def feed_data(func, new_name, test_data_docstring, *args, **kwargs):
     This internal method decorator feeds the test data item to the test.
 
     """
-    @wraps(func)
-    def wrapper(self):
-        return func(self, *args, **kwargs)
+    if inspect.iscoroutinefunction(func):
+        @wraps(func)
+        async def wrapper(self):
+            return await func(self, *args, **kwargs)
+    else:
+        @wraps(func)
+        def wrapper(self):
+            return func(self, *args, **kwargs)
+
     wrapper.__name__ = new_name
     wrapper.__wrapped__ = func
     # set docstring if exists
