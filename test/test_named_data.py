@@ -61,6 +61,3 @@ class TestNamedData(unittest.TestCase):
             )
             def _internal_test(value):
                 pass
-
-
-
