@@ -119,7 +119,7 @@ def test_data_decorator():
     extra_attrs.sort()
     assert len(extra_attrs) == 2
     assert getattr(data_hello, extra_attrs[0]) == 1
-    assert getattr(data_hello, extra_attrs[1]) == (1,2)
+    assert getattr(data_hello, extra_attrs[1]) == (1, 2)
 
 
 def test_file_data_decorator_with_dict():
@@ -137,7 +137,7 @@ def test_file_data_decorator_with_dict():
     dh_keys = set(data_hello.__dict__.keys())
     post_size = len(data_hello.__dict__)
     assert post_size == pre_size + 2
-    
+
     extra_attrs = list(dh_keys - keys)
     extra_attrs.sort()
     assert len(extra_attrs) == 2
