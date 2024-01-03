@@ -19,8 +19,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -29,6 +27,4 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Topic :: Software Development :: Testing',
     ],
-    setup_requires=['enum34; python_version < "3"'],
-    install_requires=['enum34; python_version < "3"'],
 )

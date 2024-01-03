@@ -20,14 +20,10 @@ except ImportError:  # pragma: no cover
 else:
     _have_yaml = True
 
-try:
-    # Python >=3
-    from collections.abc import Sequence
-except ImportError:
-    # Python 2.7
-    from collections import Sequence
+from collections.abc import Sequence
 
-__version__ = '1.7.0'
+
+__version__ = '1.7.1'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
