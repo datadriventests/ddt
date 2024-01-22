@@ -11,13 +11,11 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-20.04
     timeout-minutes: 5
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9, '3.10']
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -29,9 +27,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install tox tox-gh-actions
         pip install -r requirements/test.txt
-    # - name: Lint with flake8
-    #   run: |
-    #     flake8 ddt.py test
     - name: Test with pytest
       run: |
         tox
