@@ -27,10 +27,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install tox tox-gh-actions
         pip install -r requirements/test.txt
-    - name: Lint with flake8
-      run: |
-        flake8 ddt.py test
+    # - name: Lint with flake8
+    #   run: |
+    #     flake8 ddt.py test
     - name: Test with pytest
       run: |
-        pytest
+        tox
