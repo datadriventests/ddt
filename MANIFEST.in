@@ -1,2 +1,6 @@
 include *.md
 recursive-include test *.py *.json *.yaml
+include MANIFEST.in
+include LICENSE.md
+include tox.ini
+global-exclude *.py[cod] __pycache__
