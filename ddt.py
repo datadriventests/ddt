@@ -23,7 +23,7 @@ else:
 from collections.abc import Sequence
 
 
-__version__ = '1.7.1'
+__version__ = '1.7.2'
 
 # These attributes will not conflict with any real python attribute
 # They are added to the decorated test method and processed later
