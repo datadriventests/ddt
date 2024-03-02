@@ -1,8 +1,8 @@
 import os
 import json
+import sys
 from sys import modules
 import pytest
-import six
 
 try:
     from unittest import mock
@@ -444,35 +444,35 @@ def test_ddt_data_doc_attribute():
     assert getattr(getattr(ddt_mytest, 'second_test_3'), '__doc__') is None
 
 
-def test_ddt_data_unicode():
+@pytest.mark.skipif(sys.version_info.major > 2, reason='Python2 only test')
+def test_ddt_data_unicode_py2():
     """
     Test that unicode strings are converted to function names correctly
     """
-    # We test unicode support separately for python 2 and 3
+    @ddt
+    class Mytest(object):
+        @data(u'ascii', u'non-ascii-\N{SNOWMAN}', {u'\N{SNOWMAN}': 'data'})
+        def test_hello(self, val):
+            pass
 
-    if six.PY2:
+    assert getattr(Mytest, 'test_hello_1_ascii') is not None
+    assert getattr(Mytest, 'test_hello_2_non_ascii__u2603') is not None
+    assert getattr(Mytest, 'test_hello_3') is not None
 
-        @ddt
-        class Mytest(object):
-            @data(u'ascii', u'non-ascii-\N{SNOWMAN}', {u'\N{SNOWMAN}': 'data'})
-            def test_hello(self, val):
-                pass
+@pytest.mark.skipif(sys.version_info.major < 3, reason='Python3 only test')
+def test_ddt_data_unicode_py3():
+    """
+    Test that unicode strings are converted to function names correctly
+    """
+    @ddt
+    class Mytest(object):
+        @data('ascii', 'non-ascii-\N{SNOWMAN}', {'\N{SNOWMAN}': 'data'})
+        def test_hello(self, val):
+            pass
 
-        assert getattr(Mytest, 'test_hello_1_ascii') is not None
-        assert getattr(Mytest, 'test_hello_2_non_ascii__u2603') is not None
-        assert getattr(Mytest, 'test_hello_3') is not None
-
-    elif six.PY3:
-
-        @ddt
-        class Mytest(object):
-            @data('ascii', 'non-ascii-\N{SNOWMAN}', {'\N{SNOWMAN}': 'data'})
-            def test_hello(self, val):
-                pass
-
-        assert getattr(Mytest, 'test_hello_1_ascii') is not None
-        assert getattr(Mytest, 'test_hello_2_non_ascii__') is not None
-        assert getattr(Mytest, 'test_hello_3') is not None
+    assert getattr(Mytest, 'test_hello_1_ascii') is not None
+    assert getattr(Mytest, 'test_hello_2_non_ascii__') is not None
+    assert getattr(Mytest, 'test_hello_3') is not None
 
 
 def test_ddt_data_object():
