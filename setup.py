@@ -1,13 +1,19 @@
-#!/usr/bin/env python
-# # coding: utf-8
+#!/usr/bin/env python3
+
+from pathlib import Path
 
 from setuptools import setup
+
 from ddt import __version__
+
+root_dir = Path(__file__).parent
+long_description = (root_dir / "README.md").read_text()
 
 setup(
     name='ddt',
     description='Data-Driven/Decorated Tests',
-    long_description='A library to multiply test cases',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     version=__version__,
     author='Carles Barrobés',
     author_email='carles@barrobes.com',
