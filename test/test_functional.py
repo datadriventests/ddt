@@ -1,13 +1,9 @@
 import os
 import json
 from sys import modules
-import pytest
-import six
+from unittest import mock
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+import pytest
 
 from ddt import ddt, data, file_data, idata, TestNameFormat
 
@@ -19,7 +15,7 @@ class CustomClass:
 
 
 @ddt
-class Dummy(object):
+class Dummy:
     """
     Dummy class to test the data decorator on
     """
@@ -30,7 +26,7 @@ class Dummy(object):
 
 
 @ddt(testNameFormat=TestNameFormat.DEFAULT)
-class DummyTestNameFormatDefault(object):
+class DummyTestNameFormatDefault:
     """
     Dummy class to test the ddt decorator that generates test names using the
     default format (index and values).
@@ -42,7 +38,7 @@ class DummyTestNameFormatDefault(object):
 
 
 @ddt(testNameFormat=TestNameFormat.INDEX_ONLY)
-class DummyTestNameFormatIndexOnly(object):
+class DummyTestNameFormatIndexOnly:
     """
     Dummy class to test the ddt decorator that generates test names using only
     the index.
@@ -66,7 +62,7 @@ class DummyInvalidIdentifier():
 
 
 @ddt
-class FileDataDummy(object):
+class FileDataDummy:
     """
     Dummy class to test the file_data decorator on
     """
@@ -77,7 +73,7 @@ class FileDataDummy(object):
 
 
 @ddt
-class JSONFileDataMissingDummy(object):
+class JSONFileDataMissingDummy:
     """
     Dummy class to test the file_data decorator on when
     JSON file is missing
@@ -89,7 +85,7 @@ class JSONFileDataMissingDummy(object):
 
 
 @ddt
-class YAMLFileDataMissingDummy(object):
+class YAMLFileDataMissingDummy:
     """
     Dummy class to test the file_data decorator on when
     YAML file is missing
@@ -190,7 +186,7 @@ def test_idata_single_argument():
     payload = [5, 12, 13]
 
     @ddt
-    class Dummy(object):
+    class Dummy:
         """Dummy class to test that the ``idata(iterable)`` decorator works."""
         @idata(payload)
         def test_something(self, value):
@@ -213,7 +209,7 @@ def test_idata_automatic_zero_padding():
     payload = range(15)
 
     @ddt
-    class Dummy(object):
+    class Dummy:
         """Dummy class to test that the ``idata(iterable)`` decorator works."""
         @idata(payload)
         def test_something(self, value):
@@ -236,7 +232,7 @@ def test_idata_override_index_len():
     payload = [4, 2, 1]
 
     @ddt
-    class Dummy(object):
+    class Dummy:
         @idata(payload, index_len=2)
         def test_something(self, value):
             return value
@@ -263,7 +259,7 @@ def test_idata_consumable_iterator():
             yield i
 
     @ddt
-    class Dummy(object):
+    class Dummy:
         @idata(consumable_iterator())
         def test_something(self, value):
             return value
@@ -374,7 +370,7 @@ def test_ddt_data_name_attribute():
     class Myint(int):
         pass
 
-    class Mytest(object):
+    class Mytest:
         pass
 
     d1 = Myint(1)
@@ -409,7 +405,7 @@ def test_ddt_data_doc_attribute():
     class Myint(int):
         pass
 
-    class Mytest(object):
+    class Mytest:
         pass
 
     d1 = Myint(1)
@@ -448,31 +444,15 @@ def test_ddt_data_unicode():
     """
     Test that unicode strings are converted to function names correctly
     """
-    # We test unicode support separately for python 2 and 3
+    @ddt
+    class Mytest:
+        @data('ascii', 'non-ascii-\N{SNOWMAN}', {'\N{SNOWMAN}': 'data'})
+        def test_hello(self, val):
+            pass
 
-    if six.PY2:
-
-        @ddt
-        class Mytest(object):
-            @data(u'ascii', u'non-ascii-\N{SNOWMAN}', {u'\N{SNOWMAN}': 'data'})
-            def test_hello(self, val):
-                pass
-
-        assert getattr(Mytest, 'test_hello_1_ascii') is not None
-        assert getattr(Mytest, 'test_hello_2_non_ascii__u2603') is not None
-        assert getattr(Mytest, 'test_hello_3') is not None
-
-    elif six.PY3:
-
-        @ddt
-        class Mytest(object):
-            @data('ascii', 'non-ascii-\N{SNOWMAN}', {'\N{SNOWMAN}': 'data'})
-            def test_hello(self, val):
-                pass
-
-        assert getattr(Mytest, 'test_hello_1_ascii') is not None
-        assert getattr(Mytest, 'test_hello_2_non_ascii__') is not None
-        assert getattr(Mytest, 'test_hello_3') is not None
+    assert getattr(Mytest, 'test_hello_1_ascii') is not None
+    assert getattr(Mytest, 'test_hello_2_non_ascii__') is not None
+    assert getattr(Mytest, 'test_hello_3') is not None
 
 
 def test_ddt_data_object():
@@ -481,7 +461,7 @@ def test_ddt_data_object():
     """
 
     @ddt
-    class Mytest(object):
+    class Mytest:
         @data(object())
         def test_object(self, val):
             pass
@@ -511,7 +491,7 @@ def test_load_yaml_without_yaml_support():
     """
 
     @ddt
-    class NoYAMLInstalledTest(object):
+    class NoYAMLInstalledTest:
 
         @file_data('data/test_data_dict.yaml')
         def test_file_data_yaml_dict(self, value):
@@ -540,7 +520,7 @@ def test_load_yaml_with_python_tag():
 
     try:
         @ddt
-        class YamlDefaultLoaderTest(object):
+        class YamlDefaultLoaderTest:
             @file_data('data/test_functional_custom_tags.yaml')
             def test_cls_is_instance(self, cls, expected):
                 assert isinstance(cls, str_to_type(expected))
@@ -549,7 +529,7 @@ def test_load_yaml_with_python_tag():
             raise AssertionError()
 
     @ddt
-    class YamlUnsafeLoaderTest(object):
+    class YamlUnsafeLoaderTest:
         @file_data('data/test_functional_custom_tags.yaml', UnsafeLoader)
         def test_cls_is_instance(self, instance, expected):
             assert isinstance(instance, str_to_type(expected))
