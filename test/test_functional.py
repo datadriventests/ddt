@@ -9,13 +9,43 @@ try:
 except ImportError:
     import mock
 
-from ddt import ddt, data, file_data, idata, TestNameFormat
+from ddt import ddt, data, file_data, idata, unpack, TestNameFormat
 
 from test.mycode import has_three_elements
 
 
 class CustomClass:
     pass
+
+
+@pytest.mark.parametrize('extension', ['json', 'yaml'])
+@pytest.mark.parametrize('named', [False, True])
+@pytest.mark.parametrize('unpacked', [False, True])
+def test_file_data_unpack_sequences(tmp_path, extension, named, unpacked):
+    """File data unpacks positional values only when requested."""
+    rows = [['some', 'data'], ['another', 'point']]
+    payload = {'first': rows[0], 'second': rows[1]} if named else rows
+    path = tmp_path / ('values.' + extension)
+    if extension == 'yaml':
+        import yaml
+        path.write_text(yaml.safe_dump(payload), encoding='utf-8')
+    else:
+        path.write_text(json.dumps(payload), encoding='utf-8')
+
+    class FileData:
+        def test_values(self, *values):
+            return values
+
+    if unpacked:
+        FileData.test_values = unpack(FileData.test_values)
+    FileData.test_values = file_data(str(path))(FileData.test_values)
+    FileData = ddt(FileData)
+
+    instance = FileData()
+    values = [getattr(instance, name)() for name in sorted(FileData.__dict__)
+              if name.startswith('test_values_')]
+    expected = [tuple(row) if unpacked else (row,) for row in rows]
+    assert values == expected
 
 
 @ddt
