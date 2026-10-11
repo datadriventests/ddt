@@ -314,6 +314,8 @@ def _add_tests_from_data(cls, name, func, data):
             test_name = mk_test_name(name, value, i, index_len)
         if isinstance(value, dict):
             add_test(cls, test_name, test_name, func, **value)
+        elif isinstance(value, (list, tuple)) and hasattr(func, UNPACK_ATTR):
+            add_test(cls, test_name, test_name, func, *value)
         else:
             add_test(cls, test_name, test_name, func, value)
 
