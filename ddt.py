@@ -5,7 +5,6 @@
 # DDT is licensed under the MIT License, included in
 # https://github.com/datadriventests/ddt/blob/master/LICENSE.md
 
-import codecs
 import inspect
 import json
 import os
@@ -286,7 +285,7 @@ def process_file_data(cls, name, func, file_attr):
         )
         return
 
-    with codecs.open(data_file_path, 'r', 'utf-8') as f:
+    with open(data_file_path, 'r', encoding='utf-8') as f:
         # Load the data from YAML or JSON
         if _is_yaml_file:
             if hasattr(func, YAML_LOADER_ATTR):
